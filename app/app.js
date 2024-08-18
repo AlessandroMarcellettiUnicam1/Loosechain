@@ -12,6 +12,9 @@ import connectToBlockchain from './lib/blockchain/connection';
 import setupEventListeners from './lib/blockchain/events';
 import updateUI from './lib/blockchain/uiUpdater';
 
+import Web3 from 'web3';
+const { ethereum } = window;
+const web3 = new Web3(ethereum);
 let lastFile;
 let isValidating = false;
 let isDirty = false;
@@ -97,6 +100,153 @@ document.addEventListener('DOMContentLoaded', async () => {
       });
     });
   });
+
+  //upload information into contract 
+  document.getElementById('js-smart-contract').addEventListener('click',async() =>{
+
+    console.log("cia9")
+    const elements=modeler.get('elementRegistry')["_elements"];
+ 
+    let activityList=[];
+    
+    let controlFlowElementList=[];
+    let messagges=[];
+    let participantList=[];
+    for(const e in elements){
+      if(elements[e].element.type.includes("Task")){
+        // console.log(elements[e].element)
+        let activity={
+          id:"",
+          name:"",
+          initiator:"",
+          target:"",
+          idInElement:"",
+          idOutElement:"",
+          messageIn:"",
+          messageOut:"",
+          executed:false
+        }
+        const asciiResult=web3.utils.asciiToHex(elements[e].element.id);
+        activity.id=web3.utils.padRight(asciiResult,64)
+        activity.name=web3.utils.padRight(asciiResult,64)
+        activity.initiator=web3.utils.padRight(web3.utils.asciiToHex(elements[e].element.businessObject.participantRef[0].id),64);
+        activity.target=web3.utils.padRight(web3.utils.asciiToHex(elements[e].element.businessObject.participantRef[1].id),64);
+        activity.idInElement=web3.utils.padRight(web3.utils.asciiToHex(elements[e].element.businessObject.incoming[0].sourceRef.id),64);
+        activity.idOutElement=web3.utils.padRight(web3.utils.asciiToHex(elements[e].element.businessObject.outgoing[0].targetRef.id),64);
+        if(elements[e].element.businessObject.messageFlowRef[1]){
+          activity.messageIn=web3.utils.padRight(web3.utils.asciiToHex(elements[e].element.businessObject.messageFlowRef[1].messageRef.id),64);
+          activity.messageOut=web3.utils.padRight(web3.utils.asciiToHex(elements[e].element.businessObject.messageFlowRef[0].messageRef.id),64);
+        }else{
+          activity.messageIn=web3.utils.padRight(web3.utils.asciiToHex(elements[e].element.businessObject.messageFlowRef[0].messageRef.id),64);
+          activity.messageOut=web3.utils.padRight(0,64);
+        }
+        activityList.push(activity);
+      }else if(elements[e].element.type.includes("Message")){
+        let message={
+          id:"",
+          name:"",
+          mappingKey:"",
+          selectedAttr:[],
+          sourceParticipant:"",
+          targetParticipant:"",
+          idActivity:"",
+          executed:false
+        }
+        const asciiResult=web3.utils.asciiToHex(elements[e].element.id);
+        message.id=web3.utils.padRight(asciiResult,64)
+        message.name=web3.utils.padRight(asciiResult,64)
+        message.mappingKey=web3.utils.padRight(0,64);
+        message.sourceParticipant="0xDc5796010883B712413fC0b97F257d724088eD37";
+        message.targetParticipant="0xDc5796010883B712413fC0b97F257d724088eD37";
+        activityList.forEach((e)=>{
+          if(e.messageIn.includes(message.id)){
+            message.idActivity=e.id;
+          }
+        })
+        messagges.push(message);
+      }else if(elements[e].element.type.includes("Event") ||elements[e].element.type.includes("Gateway")){
+        // console.log(elements[e].element)
+        let typeList=["bpmn:StartEvent","bpmn:ExclusiveGateway","bpmn:EndEvent","bpmn:ParallelGateway","bpmn:EventBasedGateway"]
+        let controlFlowElement={
+          id:"",
+          type:"",
+          incomingActivity:[],
+          outgoingActivity:[],
+          executed:false
+        }
+        const asciiResult=web3.utils.asciiToHex(elements[e].element.id);
+        controlFlowElement.id=web3.utils.padRight(asciiResult,64)
+        if(elements[e].element.type.includes("bpmn:StartEvent")){
+          controlFlowElement.type="0"
+        }else if(elements[e].element.type.includes("bpmn:ExclusiveGateway")){
+          if(elements[e].element.businessObject.name="SPLIT"){
+            controlFlowElement.type="1"
+          }else{
+            controlFlowElement.type="2"
+          }
+        }else if(elements[e].element.type.includes("bpmn:ParallelGateway")){
+          if(elements[e].element.businessObject.name="SPLIT"){
+            controlFlowElement.type="3"
+          }else{
+            controlFlowElement.type="4"
+          }
+        }else if(elements[e].element.type.includes("bpmn:EventBasedGateway")){
+          controlFlowElement.type="5"
+        }else if(elements[e].element.type.includes("bpmn:EndEvent")){
+          controlFlowElement.type="6"
+        }
+        if(elements[e].element.businessObject.outgoing){
+          elements[e].element.businessObject.outgoing.forEach((ref)=>{
+            controlFlowElement.outgoingActivity.push(web3.utils.padRight(web3.utils.asciiToHex(ref.targetRef.id),64))
+          })
+        }
+        if(elements[e].element.businessObject.incoming){
+          elements[e].element.businessObject.incoming.forEach((ref)=>{
+            controlFlowElement.incomingActivity.push(web3.utils.padRight(web3.utils.asciiToHex(ref.sourceRef.id),64))
+          })
+        }
+        controlFlowElementList.push(controlFlowElement);
+      }
+    }
+    console.log(controlFlowElementList)
+    console.log(activityList)
+    console.log(messagges)
+    let activityResult="[";
+    activityList.forEach((element)=>{
+      activityResult+=JSON.stringify([
+        element.id,
+        element.name,
+        element.initiator,
+        element.target,
+        element.idInElement,
+        element.idOutElement,
+        element.messageIn,
+        element.messageOut,
+        element.executed
+      ])+","
+    })
+    activityResult=activityResult.substring(0,activityResult.length-1)
+    activityResult+="],"
+    let messaggesResult="[";
+    console.log(activityResult)
+    messagges.forEach(element=>{
+      messaggesResult+=JSON.stringify([
+        element.id,
+        element.name,
+        element.mappingKey,
+        element.selectedAttr,
+        element.sourceParticipant,
+        element.targetParticipant,
+        element.idActivity,
+        element.executed
+      ])+","
+    })
+    messaggesResult=messaggesResult.substring(0,messaggesResult.length-1)
+    messagges+="],"
+    let totalResult;
+    totalResult=activityResult+messaggesResult
+    console.log(totalResult)
+  })
 
   // create new diagram
   const newDiagram = document.getElementById('js-new-diagram');
