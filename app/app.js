@@ -111,10 +111,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     let controlFlowElementList=[];
     let messagges=[];
+    let messageAttributesList=[];
+    let messageAttributesListKey=[];
+    //TODO: figure out how to pass the address to the front-end for the participant list 
+    let defaultAddress="0xf9F784267A3B39b926B9A98281CA22f0E5D11Baf";
+    let addressKeyMappingList=[];
     let participantList=[];
     for(const e in elements){
       if(elements[e].element.type.includes("Task")){
-        // console.log(elements[e].element)
+        // console.log(elements[e].element) 
         let activity={
           id:"",
           name:"",
@@ -141,7 +146,24 @@ document.addEventListener('DOMContentLoaded', async () => {
           activity.messageOut=web3.utils.padRight(0,64);
         }
         activityList.push(activity);
+        let participantElement={
+          keyMapping:"",
+          address:[]
+        }
+          if (!addressKeyMappingList.includes(activity.initiator)){
+            participantElement.keyMapping=activity.initiator;
+            participantElement.address.push(defaultAddress);
+            participantList.push(participantElement)
+            addressKeyMappingList.push(activity.initiator)
+          }else if(!addressKeyMappingList.includes(activity.target)){
+            participantElement.keyMapping=activity.target;
+            participantElement.address.push(defaultAddress);
+            participantList.push(participantElement)
+            addressKeyMappingList.push(activity.target);
+          }
+          //TODO List of message attributes 
       }else if(elements[e].element.type.includes("Message")){
+        // console.log(elements[e].element) 
         let message={
           id:"",
           name:"",
@@ -161,9 +183,23 @@ document.addEventListener('DOMContentLoaded', async () => {
         activityList.forEach((e)=>{
           if(e.messageIn.includes(message.id)){
             message.idActivity=e.id;
+          }else if (e.messageOut.includes(message.id)){
+            message.idActivity=e.id;
           }
         })
         messagges.push(message);
+        let messageAttributeStruct={
+          keyMapping:"",
+          attributes:[]
+        }
+        if (elements[e].element.businessObject.get('messageItems')[0] && !messageAttributesListKey.includes(elements[e].element.businessObject.get('messageItems'))){
+          messageAttributeStruct.keyMapping=web3.utils.padRight(web3.utils.asciiToHex(elements[e].element.businessObject.get('messageItems')[0].name),64);
+          elements[e].element.businessObject.get('attributeItems').forEach((attrbute)=>{
+            messageAttributeStruct.attributes.push(web3.utils.padRight(web3.utils.asciiToHex(attrbute.name),64))
+          })
+          messageAttributesList.push(messageAttributeStruct)
+          messageAttributesListKey.push(elements[e].element.businessObject.get('messageItems')[0].name)
+        }
       }else if(elements[e].element.type.includes("Event") ||elements[e].element.type.includes("Gateway")){
         // console.log(elements[e].element)
         let typeList=["bpmn:StartEvent","bpmn:ExclusiveGateway","bpmn:EndEvent","bpmn:ParallelGateway","bpmn:EventBasedGateway"]
@@ -208,9 +244,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         controlFlowElementList.push(controlFlowElement);
       }
     }
-    console.log(controlFlowElementList)
-    console.log(activityList)
-    console.log(messagges)
+    // console.log(messageAttributesList)
+    // console.log(participantList)
     let activityResult="[";
     activityList.forEach((element)=>{
       activityResult+=JSON.stringify([
@@ -228,7 +263,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     activityResult=activityResult.substring(0,activityResult.length-1)
     activityResult+="],"
     let messaggesResult="[";
-    console.log(activityResult)
     messagges.forEach(element=>{
       messaggesResult+=JSON.stringify([
         element.id,
@@ -241,10 +275,42 @@ document.addEventListener('DOMContentLoaded', async () => {
         element.executed
       ])+","
     })
-    messaggesResult=messaggesResult.substring(0,messaggesResult.length-1)
-    messagges+="],"
+    messaggesResult=messaggesResult.substring(0,messaggesResult.length-1);
+    messaggesResult+="],";
+    let participantListResult="[";
+    participantList.forEach(element=>{
+      participantListResult+=JSON.stringify([
+        element.keyMapping,
+        element.address
+      ])+","
+    })
+    participantListResult=participantListResult.substring(0,participantListResult.length-1);
+    participantListResult+="],";
+    let messageAttributesResult="[";
+    messageAttributesList.forEach((element)=>{
+      messageAttributesResult+=JSON.stringify([
+        element.keyMapping,
+        element.attributes
+      ])+","
+    })
+    messageAttributesResult=messageAttributesResult.substring(0,messageAttributesResult.length-1);
+    messageAttributesResult+="],";
+    console.log(messageAttributesResult)
+    let controlFlowElementListResult="[";
+    controlFlowElementList.forEach((element)=>{
+      controlFlowElementListResult+=JSON.stringify([
+        element.id,
+        element.type,
+        element.incomingActivity,
+        element.outgoingActivity,
+        element.executed
+      ])+","
+    })
+    controlFlowElementListResult=controlFlowElementListResult.substring(0,controlFlowElementListResult.length-1);
+    controlFlowElementListResult+="],";
+    let edgeConditionResult="[]";
     let totalResult;
-    totalResult=activityResult+messaggesResult
+    totalResult=activityResult+messaggesResult+participantListResult+messageAttributesResult+controlFlowElementListResult+edgeConditionResult;
     console.log(totalResult)
   })
 

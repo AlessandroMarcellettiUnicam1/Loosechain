@@ -19,6 +19,15 @@ export default function addSelectionProps(group, element, bpmnFactory, translate
     type: 'loose:MessageValue'
   });
 
+  addTableDefinition(group, element, bpmnFactory, translate, 'bpmn:Message', {
+    id: 'attributeList',
+    description: 'Attribute List',
+    labels: 'Attribute',
+    addLabel: 'Add Attribute',
+    businessObjectProperty: 'attributeItems',
+    type: 'loose:AttributeValue'
+  });
+
   addTableDefinition(group, element, bpmnFactory, translate, 'bpmn:Participant', {
     id: 'participantList',
     description: 'Participant List',

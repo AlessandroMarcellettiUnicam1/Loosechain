@@ -42,9 +42,14 @@ function addMessageProps(group, businessObject, translate) {
     selectOptions: () => getMessageItems(businessObject),
     modelProperty: 'messageItem',
   }));
-
-  const attributeItems = getParentChoreographyElement(businessObject).get('attributeItems');
-  attributeItems.forEach((item, index) => addAttributeProps(group, businessObject, translate, item, index));
+  //TODO: differentiate the selection and the composition case 
+  if(businessObject.get('attributeItems').length>0){
+    const attributeSelectionItems = businessObject.get('attributeItems');
+    attributeSelectionItems.forEach((item, index) => addAttributeProps(group, businessObject, translate, item, index));
+  }else{
+    const attributeItems = getParentChoreographyElement(businessObject).get('attributeItems');
+    attributeItems.forEach((item, index) => addAttributeProps(group, businessObject, translate, item, index));
+  }
 }
 
 /**
@@ -88,13 +93,15 @@ function addAttributeProps(group, businessObject, translate, item, index) {
     id: 'attribute' + index,
     label: item.name,
     modelProperty: modelProperty,
-    hidden: () => hasMessageItems(businessObject),
+    //line that hide the checkbox in the case of attribute selected during the selection
+    // hidden: () => hasMessageItems(businessObject),
     get: () => {
       // Logic for getting the attribute value and deselecting the checkbox if the BPMN element has message items
       const res = {};
-      res[modelProperty] = hasMessageItems(businessObject)
-        ? delete businessObject.$attrs[modelProperty]
-        : businessObject.get(modelProperty);
+      // res[modelProperty] = hasMessageItems(businessObject)
+      //   ? delete businessObject.$attrs[modelProperty]
+      //   : businessObject.get(modelProperty);
+      res[modelProperty]=businessObject.get(modelProperty);
       return res;
     }
   }));
