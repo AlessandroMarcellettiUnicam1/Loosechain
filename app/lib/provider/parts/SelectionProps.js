@@ -16,17 +16,20 @@ export default function addSelectionProps(group, element, bpmnFactory, translate
     labels: 'Message',
     addLabel: 'Add Message',
     businessObjectProperty: 'messageItems',
-    type: 'loose:MessageValue'
+    type: 'loose:MessageValue',
+    buttonAction:{
+      name:"buttonAction",
+      method:(e)=>{
+        e.preventDefault()
+        console.log("action")
+      }
+    },
+    buttonShow:{
+      name:"buttonShow",
+      method:console.log("Show")
+    }
   });
 
-  addTableDefinition(group, element, bpmnFactory, translate, 'bpmn:Message', {
-    id: 'attributeList',
-    description: 'Attribute List',
-    labels: 'Attribute',
-    addLabel: 'Add Attribute',
-    businessObjectProperty: 'attributeItems',
-    type: 'loose:AttributeValue'
-  });
 
   addTableDefinition(group, element, bpmnFactory, translate, 'bpmn:Participant', {
     id: 'participantList',

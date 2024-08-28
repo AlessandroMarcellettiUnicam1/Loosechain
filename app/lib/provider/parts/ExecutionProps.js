@@ -42,14 +42,20 @@ function addMessageProps(group, businessObject, translate) {
     selectOptions: () => getMessageItems(businessObject),
     modelProperty: 'messageItem',
   }));
-  //TODO: differentiate the selection and the composition case 
-  if(businessObject.get('attributeItems').length>0){
-    const attributeSelectionItems = businessObject.get('attributeItems');
-    attributeSelectionItems.forEach((item, index) => addAttributeProps(group, businessObject, translate, item, index));
-  }else{
+  group.entries.push(entryFactory.link(translate,{
+    id:"link",
+    description:"qualcosa",
+    handleClick: function(element, node, event) {  },
+    showLink: function(element, node) {  }
+  }))
     const attributeItems = getParentChoreographyElement(businessObject).get('attributeItems');
     attributeItems.forEach((item, index) => addAttributeProps(group, businessObject, translate, item, index));
-  }
+    group.entries.push(entryFactory.textBox(translate,{
+      id:'attributeValues',
+      label:translate('Attribute Value'),
+      modelProperty: 'attributeValues',
+    }));
+  // }
 }
 
 /**
@@ -86,7 +92,7 @@ function hasMessageItems(businessObject) {
 function getParentChoreographyElement(businessObject) {
   return businessObject.$parent.get('rootElements').find(e => e.$type === 'bpmn:Choreography');
 }
-
+//TODO how to gate the value of the checkbox from the composition case 
 function addAttributeProps(group, businessObject, translate, item, index) {
   const modelProperty = 'attribute' + index + '_' + item.name;
   group.entries.push(entryFactory.checkbox(translate,{
@@ -94,14 +100,13 @@ function addAttributeProps(group, businessObject, translate, item, index) {
     label: item.name,
     modelProperty: modelProperty,
     //line that hide the checkbox in the case of attribute selected during the selection
-    // hidden: () => hasMessageItems(businessObject),
+    hidden: () => hasMessageItems(businessObject),
     get: () => {
       // Logic for getting the attribute value and deselecting the checkbox if the BPMN element has message items
       const res = {};
-      // res[modelProperty] = hasMessageItems(businessObject)
-      //   ? delete businessObject.$attrs[modelProperty]
-      //   : businessObject.get(modelProperty);
-      res[modelProperty]=businessObject.get(modelProperty);
+      res[modelProperty] = hasMessageItems(businessObject)
+        ? delete businessObject.$attrs[modelProperty]
+        : businessObject.get(modelProperty);
       return res;
     }
   }));

@@ -21,6 +21,16 @@
           "type": "loose:MessageValue"
         },
         {
+          "name":"attributeValues",
+          "isMany":true,
+          "type":"loose:MessageAttributeValues"
+        },
+        {
+          "name":"link",
+          "isMany":true,
+          "type":"loose:MessageButton"
+        },
+        {
           "name": "attributeItems",
           "isMany": true,
           "type": "loose:AttributeValue"
@@ -39,6 +49,16 @@
           "name": "name",
           "isAttr": true,
           "type": "String"
+        }
+      ]
+    },
+    {
+      "name":"MessageAttributeValues",
+      "properties":[
+        {
+          "name":"name",
+          "isAttr":true,
+          "type":"String"
         }
       ]
     },

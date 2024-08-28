@@ -41,23 +41,13 @@ export const contractAbi = [
 		"name": "attivita",
 		"outputs": [
 			{
+				"internalType": "bool",
+				"name": "executed",
+				"type": "bool"
+			},
+			{
 				"internalType": "bytes32",
 				"name": "id",
-				"type": "bytes32"
-			},
-			{
-				"internalType": "bytes32",
-				"name": "name",
-				"type": "bytes32"
-			},
-			{
-				"internalType": "bytes32",
-				"name": "initiator",
-				"type": "bytes32"
-			},
-			{
-				"internalType": "bytes32",
-				"name": "target",
 				"type": "bytes32"
 			},
 			{
@@ -72,6 +62,11 @@ export const contractAbi = [
 			},
 			{
 				"internalType": "bytes32",
+				"name": "initiator",
+				"type": "bytes32"
+			},
+			{
+				"internalType": "bytes32",
 				"name": "messageIn",
 				"type": "bytes32"
 			},
@@ -81,9 +76,14 @@ export const contractAbi = [
 				"type": "bytes32"
 			},
 			{
-				"internalType": "bool",
-				"name": "executed",
-				"type": "bool"
+				"internalType": "bytes32",
+				"name": "name",
+				"type": "bytes32"
+			},
+			{
+				"internalType": "bytes32",
+				"name": "target",
+				"type": "bytes32"
 			}
 		],
 		"stateMutability": "view",
@@ -112,12 +112,36 @@ export const contractAbi = [
 		"inputs": [
 			{
 				"internalType": "bytes32",
+				"name": "key",
+				"type": "bytes32"
+			}
+		],
+		"name": "checkKeyMessage",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "bytes32",
 				"name": "",
 				"type": "bytes32"
 			}
 		],
 		"name": "controlFlowElementList",
 		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "executed",
+				"type": "bool"
+			},
 			{
 				"internalType": "bytes32",
 				"name": "id",
@@ -127,11 +151,6 @@ export const contractAbi = [
 				"internalType": "enum storeElement.ElementType",
 				"name": "tipo",
 				"type": "uint8"
-			},
-			{
-				"internalType": "bool",
-				"name": "executed",
-				"type": "bool"
 			}
 		],
 		"stateMutability": "view",
@@ -181,23 +200,13 @@ export const contractAbi = [
 			{
 				"components": [
 					{
+						"internalType": "bool",
+						"name": "executed",
+						"type": "bool"
+					},
+					{
 						"internalType": "bytes32",
 						"name": "id",
-						"type": "bytes32"
-					},
-					{
-						"internalType": "bytes32",
-						"name": "name",
-						"type": "bytes32"
-					},
-					{
-						"internalType": "bytes32",
-						"name": "initiator",
-						"type": "bytes32"
-					},
-					{
-						"internalType": "bytes32",
-						"name": "target",
 						"type": "bytes32"
 					},
 					{
@@ -212,6 +221,11 @@ export const contractAbi = [
 					},
 					{
 						"internalType": "bytes32",
+						"name": "initiator",
+						"type": "bytes32"
+					},
+					{
+						"internalType": "bytes32",
 						"name": "messageIn",
 						"type": "bytes32"
 					},
@@ -221,9 +235,14 @@ export const contractAbi = [
 						"type": "bytes32"
 					},
 					{
-						"internalType": "bool",
-						"name": "executed",
-						"type": "bool"
+						"internalType": "bytes32",
+						"name": "name",
+						"type": "bytes32"
+					},
+					{
+						"internalType": "bytes32",
+						"name": "target",
+						"type": "bytes32"
 					}
 				],
 				"internalType": "struct storeElement.Activity",
@@ -233,18 +252,28 @@ export const contractAbi = [
 			{
 				"components": [
 					{
+						"internalType": "bool",
+						"name": "executed",
+						"type": "bool"
+					},
+					{
 						"internalType": "bytes32",
 						"name": "id",
 						"type": "bytes32"
 					},
 					{
 						"internalType": "bytes32",
-						"name": "nome",
+						"name": "idActivity",
 						"type": "bytes32"
 					},
 					{
 						"internalType": "bytes32",
 						"name": "mappingKey",
+						"type": "bytes32"
+					},
+					{
+						"internalType": "bytes32",
+						"name": "name",
 						"type": "bytes32"
 					},
 					{
@@ -261,16 +290,6 @@ export const contractAbi = [
 						"internalType": "address",
 						"name": "targetParticipant",
 						"type": "address"
-					},
-					{
-						"internalType": "bytes32",
-						"name": "idActivity",
-						"type": "bytes32"
-					},
-					{
-						"internalType": "bool",
-						"name": "executed",
-						"type": "bool"
 					}
 				],
 				"internalType": "struct storeElement.Message",
@@ -290,14 +309,14 @@ export const contractAbi = [
 			{
 				"components": [
 					{
+						"internalType": "bool",
+						"name": "executed",
+						"type": "bool"
+					},
+					{
 						"internalType": "bytes32",
 						"name": "id",
 						"type": "bytes32"
-					},
-					{
-						"internalType": "enum storeElement.ElementType",
-						"name": "tipo",
-						"type": "uint8"
 					},
 					{
 						"internalType": "bytes32[]",
@@ -310,9 +329,9 @@ export const contractAbi = [
 						"type": "bytes32[]"
 					},
 					{
-						"internalType": "bool",
-						"name": "executed",
-						"type": "bool"
+						"internalType": "enum storeElement.ElementType",
+						"name": "tipo",
+						"type": "uint8"
 					}
 				],
 				"internalType": "struct storeElement.ControlFlowElement[]",
@@ -399,172 +418,38 @@ export const contractAbi = [
 		"inputs": [
 			{
 				"internalType": "bytes32",
-				"name": "id",
+				"name": "key",
 				"type": "bytes32"
-			},
-			{
-				"internalType": "bytes32",
-				"name": "name",
-				"type": "bytes32"
-			},
-			{
-				"internalType": "bytes32",
-				"name": "initiator",
-				"type": "bytes32"
-			},
-			{
-				"internalType": "bytes32",
-				"name": "target",
-				"type": "bytes32"
-			},
-			{
-				"internalType": "bytes32",
-				"name": "idInElement",
-				"type": "bytes32"
-			},
-			{
-				"internalType": "bytes32",
-				"name": "idOutElement",
-				"type": "bytes32"
-			},
-			{
-				"internalType": "bytes32",
-				"name": "messageIn",
-				"type": "bytes32"
-			},
-			{
-				"internalType": "bytes32",
-				"name": "messageOut",
-				"type": "bytes32"
-			},
-			{
-				"internalType": "bool",
-				"name": "executed",
-				"type": "bool"
 			}
 		],
-		"name": "getAttivita",
+		"name": "getListAttributeForKey",
 		"outputs": [
 			{
-				"components": [
-					{
-						"internalType": "bytes32",
-						"name": "id",
-						"type": "bytes32"
-					},
-					{
-						"internalType": "bytes32",
-						"name": "name",
-						"type": "bytes32"
-					},
-					{
-						"internalType": "bytes32",
-						"name": "initiator",
-						"type": "bytes32"
-					},
-					{
-						"internalType": "bytes32",
-						"name": "target",
-						"type": "bytes32"
-					},
-					{
-						"internalType": "bytes32",
-						"name": "idInElement",
-						"type": "bytes32"
-					},
-					{
-						"internalType": "bytes32",
-						"name": "idOutElement",
-						"type": "bytes32"
-					},
-					{
-						"internalType": "bytes32",
-						"name": "messageIn",
-						"type": "bytes32"
-					},
-					{
-						"internalType": "bytes32",
-						"name": "messageOut",
-						"type": "bytes32"
-					},
-					{
-						"internalType": "bool",
-						"name": "executed",
-						"type": "bool"
-					}
-				],
-				"internalType": "struct storeElement.Activity",
+				"internalType": "bytes32[]",
 				"name": "",
-				"type": "tuple"
+				"type": "bytes32[]"
 			}
 		],
-		"stateMutability": "pure",
+		"stateMutability": "view",
 		"type": "function"
 	},
 	{
 		"inputs": [
 			{
 				"internalType": "bytes32",
-				"name": "id",
+				"name": "key",
 				"type": "bytes32"
-			},
-			{
-				"internalType": "enum storeElement.ElementType",
-				"name": "tipo",
-				"type": "uint8"
-			},
-			{
-				"internalType": "bytes32[]",
-				"name": "incomingActivity",
-				"type": "bytes32[]"
-			},
-			{
-				"internalType": "bytes32[]",
-				"name": "outgoingActivity",
-				"type": "bytes32[]"
-			},
-			{
-				"internalType": "bool",
-				"name": "executed",
-				"type": "bool"
 			}
 		],
-		"name": "getFlow",
+		"name": "getListParticipant",
 		"outputs": [
 			{
-				"components": [
-					{
-						"internalType": "bytes32",
-						"name": "id",
-						"type": "bytes32"
-					},
-					{
-						"internalType": "enum storeElement.ElementType",
-						"name": "tipo",
-						"type": "uint8"
-					},
-					{
-						"internalType": "bytes32[]",
-						"name": "incomingActivity",
-						"type": "bytes32[]"
-					},
-					{
-						"internalType": "bytes32[]",
-						"name": "outgoingActivity",
-						"type": "bytes32[]"
-					},
-					{
-						"internalType": "bool",
-						"name": "executed",
-						"type": "bool"
-					}
-				],
-				"internalType": "struct storeElement.ControlFlowElement",
+				"internalType": "address[]",
 				"name": "",
-				"type": "tuple"
+				"type": "address[]"
 			}
 		],
-		"stateMutability": "pure",
+		"stateMutability": "view",
 		"type": "function"
 	},
 	{
@@ -584,102 +469,6 @@ export const contractAbi = [
 			}
 		],
 		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "bytes32",
-				"name": "id",
-				"type": "bytes32"
-			},
-			{
-				"internalType": "bytes32",
-				"name": "nome",
-				"type": "bytes32"
-			},
-			{
-				"internalType": "bytes32",
-				"name": "mappingKey",
-				"type": "bytes32"
-			},
-			{
-				"internalType": "bytes32[]",
-				"name": "selectedAttr",
-				"type": "bytes32[]"
-			},
-			{
-				"internalType": "address",
-				"name": "sourceParticipant",
-				"type": "address"
-			},
-			{
-				"internalType": "address",
-				"name": "targetParticipant",
-				"type": "address"
-			},
-			{
-				"internalType": "bytes32",
-				"name": "idActivity",
-				"type": "bytes32"
-			},
-			{
-				"internalType": "bool",
-				"name": "executed",
-				"type": "bool"
-			}
-		],
-		"name": "getMessage",
-		"outputs": [
-			{
-				"components": [
-					{
-						"internalType": "bytes32",
-						"name": "id",
-						"type": "bytes32"
-					},
-					{
-						"internalType": "bytes32",
-						"name": "nome",
-						"type": "bytes32"
-					},
-					{
-						"internalType": "bytes32",
-						"name": "mappingKey",
-						"type": "bytes32"
-					},
-					{
-						"internalType": "bytes32[]",
-						"name": "selectedAttr",
-						"type": "bytes32[]"
-					},
-					{
-						"internalType": "address",
-						"name": "sourceParticipant",
-						"type": "address"
-					},
-					{
-						"internalType": "address",
-						"name": "targetParticipant",
-						"type": "address"
-					},
-					{
-						"internalType": "bytes32",
-						"name": "idActivity",
-						"type": "bytes32"
-					},
-					{
-						"internalType": "bool",
-						"name": "executed",
-						"type": "bool"
-					}
-				],
-				"internalType": "struct storeElement.Message",
-				"name": "",
-				"type": "tuple"
-			}
-		],
-		"stateMutability": "pure",
 		"type": "function"
 	},
 	{
@@ -736,18 +525,28 @@ export const contractAbi = [
 		"name": "messaggi",
 		"outputs": [
 			{
+				"internalType": "bool",
+				"name": "executed",
+				"type": "bool"
+			},
+			{
 				"internalType": "bytes32",
 				"name": "id",
 				"type": "bytes32"
 			},
 			{
 				"internalType": "bytes32",
-				"name": "nome",
+				"name": "idActivity",
 				"type": "bytes32"
 			},
 			{
 				"internalType": "bytes32",
 				"name": "mappingKey",
+				"type": "bytes32"
+			},
+			{
+				"internalType": "bytes32",
+				"name": "name",
 				"type": "bytes32"
 			},
 			{
@@ -759,16 +558,6 @@ export const contractAbi = [
 				"internalType": "address",
 				"name": "targetParticipant",
 				"type": "address"
-			},
-			{
-				"internalType": "bytes32",
-				"name": "idActivity",
-				"type": "bytes32"
-			},
-			{
-				"internalType": "bool",
-				"name": "executed",
-				"type": "bool"
 			}
 		],
 		"stateMutability": "view",
@@ -803,23 +592,13 @@ export const contractAbi = [
 			{
 				"components": [
 					{
+						"internalType": "bool",
+						"name": "executed",
+						"type": "bool"
+					},
+					{
 						"internalType": "bytes32",
 						"name": "id",
-						"type": "bytes32"
-					},
-					{
-						"internalType": "bytes32",
-						"name": "name",
-						"type": "bytes32"
-					},
-					{
-						"internalType": "bytes32",
-						"name": "initiator",
-						"type": "bytes32"
-					},
-					{
-						"internalType": "bytes32",
-						"name": "target",
 						"type": "bytes32"
 					},
 					{
@@ -834,6 +613,11 @@ export const contractAbi = [
 					},
 					{
 						"internalType": "bytes32",
+						"name": "initiator",
+						"type": "bytes32"
+					},
+					{
+						"internalType": "bytes32",
 						"name": "messageIn",
 						"type": "bytes32"
 					},
@@ -843,9 +627,14 @@ export const contractAbi = [
 						"type": "bytes32"
 					},
 					{
-						"internalType": "bool",
-						"name": "executed",
-						"type": "bool"
+						"internalType": "bytes32",
+						"name": "name",
+						"type": "bytes32"
+					},
+					{
+						"internalType": "bytes32",
+						"name": "target",
+						"type": "bytes32"
 					}
 				],
 				"internalType": "struct storeElement.Activity",
@@ -863,18 +652,28 @@ export const contractAbi = [
 			{
 				"components": [
 					{
+						"internalType": "bool",
+						"name": "executed",
+						"type": "bool"
+					},
+					{
 						"internalType": "bytes32",
 						"name": "id",
 						"type": "bytes32"
 					},
 					{
 						"internalType": "bytes32",
-						"name": "nome",
+						"name": "idActivity",
 						"type": "bytes32"
 					},
 					{
 						"internalType": "bytes32",
 						"name": "mappingKey",
+						"type": "bytes32"
+					},
+					{
+						"internalType": "bytes32",
+						"name": "name",
 						"type": "bytes32"
 					},
 					{
@@ -891,16 +690,6 @@ export const contractAbi = [
 						"internalType": "address",
 						"name": "targetParticipant",
 						"type": "address"
-					},
-					{
-						"internalType": "bytes32",
-						"name": "idActivity",
-						"type": "bytes32"
-					},
-					{
-						"internalType": "bool",
-						"name": "executed",
-						"type": "bool"
 					}
 				],
 				"internalType": "struct storeElement.Message",
@@ -918,23 +707,13 @@ export const contractAbi = [
 			{
 				"components": [
 					{
+						"internalType": "bool",
+						"name": "executed",
+						"type": "bool"
+					},
+					{
 						"internalType": "bytes32",
 						"name": "id",
-						"type": "bytes32"
-					},
-					{
-						"internalType": "bytes32",
-						"name": "name",
-						"type": "bytes32"
-					},
-					{
-						"internalType": "bytes32",
-						"name": "initiator",
-						"type": "bytes32"
-					},
-					{
-						"internalType": "bytes32",
-						"name": "target",
 						"type": "bytes32"
 					},
 					{
@@ -949,6 +728,11 @@ export const contractAbi = [
 					},
 					{
 						"internalType": "bytes32",
+						"name": "initiator",
+						"type": "bytes32"
+					},
+					{
+						"internalType": "bytes32",
 						"name": "messageIn",
 						"type": "bytes32"
 					},
@@ -958,9 +742,14 @@ export const contractAbi = [
 						"type": "bytes32"
 					},
 					{
-						"internalType": "bool",
-						"name": "executed",
-						"type": "bool"
+						"internalType": "bytes32",
+						"name": "name",
+						"type": "bytes32"
+					},
+					{
+						"internalType": "bytes32",
+						"name": "target",
+						"type": "bytes32"
 					}
 				],
 				"internalType": "struct storeElement.Activity[]",
@@ -970,18 +759,28 @@ export const contractAbi = [
 			{
 				"components": [
 					{
+						"internalType": "bool",
+						"name": "executed",
+						"type": "bool"
+					},
+					{
 						"internalType": "bytes32",
 						"name": "id",
 						"type": "bytes32"
 					},
 					{
 						"internalType": "bytes32",
-						"name": "nome",
+						"name": "idActivity",
 						"type": "bytes32"
 					},
 					{
 						"internalType": "bytes32",
 						"name": "mappingKey",
+						"type": "bytes32"
+					},
+					{
+						"internalType": "bytes32",
+						"name": "name",
 						"type": "bytes32"
 					},
 					{
@@ -998,16 +797,6 @@ export const contractAbi = [
 						"internalType": "address",
 						"name": "targetParticipant",
 						"type": "address"
-					},
-					{
-						"internalType": "bytes32",
-						"name": "idActivity",
-						"type": "bytes32"
-					},
-					{
-						"internalType": "bool",
-						"name": "executed",
-						"type": "bool"
 					}
 				],
 				"internalType": "struct storeElement.Message[]",
@@ -1017,14 +806,14 @@ export const contractAbi = [
 			{
 				"components": [
 					{
-						"internalType": "bytes32",
-						"name": "key",
-						"type": "bytes32"
+						"internalType": "address[]",
+						"name": "addr",
+						"type": "address[]"
 					},
 					{
-						"internalType": "address[]",
-						"name": "indirizzi",
-						"type": "address[]"
+						"internalType": "bytes32",
+						"name": "keyMapping",
+						"type": "bytes32"
 					}
 				],
 				"internalType": "struct storeElement.PartecipantRoles[]",
@@ -1034,14 +823,14 @@ export const contractAbi = [
 			{
 				"components": [
 					{
-						"internalType": "bytes32",
-						"name": "key",
-						"type": "bytes32"
-					},
-					{
 						"internalType": "bytes32[]",
 						"name": "attributes",
 						"type": "bytes32[]"
+					},
+					{
+						"internalType": "bytes32",
+						"name": "keyMapping",
+						"type": "bytes32"
 					}
 				],
 				"internalType": "struct storeElement.MessageAttributes[]",
@@ -1051,14 +840,14 @@ export const contractAbi = [
 			{
 				"components": [
 					{
+						"internalType": "bool",
+						"name": "executed",
+						"type": "bool"
+					},
+					{
 						"internalType": "bytes32",
 						"name": "id",
 						"type": "bytes32"
-					},
-					{
-						"internalType": "enum storeElement.ElementType",
-						"name": "tipo",
-						"type": "uint8"
 					},
 					{
 						"internalType": "bytes32[]",
@@ -1071,9 +860,9 @@ export const contractAbi = [
 						"type": "bytes32[]"
 					},
 					{
-						"internalType": "bool",
-						"name": "executed",
-						"type": "bool"
+						"internalType": "enum storeElement.ElementType",
+						"name": "tipo",
+						"type": "uint8"
 					}
 				],
 				"internalType": "struct storeElement.ControlFlowElement[]",
@@ -1148,4 +937,4 @@ export const contractAbi = [
 	}
 ];
 
-export const contractAddress = '0xD506cFf3baE1e9e41165541cc7DA246001b23f70';
+export const contractAddress = '0x9790a315B3491cE922A00a03D9105479Ade7CccC';

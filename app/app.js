@@ -5,7 +5,7 @@ import PropertiesProviderModule from './lib/provider';
 
 import looseValuesModdleDescriptor from './lib/descriptors/loose-values.json';
 
-import xml from './diagrams/EmergencyResponePlan_none.bpmn';
+import xml from './diagrams/diagram_xml.bpmn';
 import blankXml from './diagrams/newDiagram.bpmn';
 
 import connectToBlockchain from './lib/blockchain/connection';
@@ -117,9 +117,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     let defaultAddress="0xf9F784267A3B39b926B9A98281CA22f0E5D11Baf";
     let addressKeyMappingList=[];
     let participantList=[];
+    let edgeConditionList=[];
     for(const e in elements){
+
       if(elements[e].element.type.includes("Task")){
-        // console.log(elements[e].element) 
         let activity={
           id:"",
           name:"",
@@ -148,16 +149,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         activityList.push(activity);
         let participantElement={
           keyMapping:"",
-          address:[]
+          addr:[]
         }
           if (!addressKeyMappingList.includes(activity.initiator)){
             participantElement.keyMapping=activity.initiator;
-            participantElement.address.push(defaultAddress);
+            participantElement.addr.push(defaultAddress);
             participantList.push(participantElement)
             addressKeyMappingList.push(activity.initiator)
           }else if(!addressKeyMappingList.includes(activity.target)){
             participantElement.keyMapping=activity.target;
-            participantElement.address.push(defaultAddress);
+            participantElement.addr.push(defaultAddress);
             participantList.push(participantElement)
             addressKeyMappingList.push(activity.target);
           }
@@ -192,20 +193,37 @@ document.addEventListener('DOMContentLoaded', async () => {
           keyMapping:"",
           attributes:[]
         }
-        if (elements[e].element.businessObject.get('messageItems')[0] && !messageAttributesListKey.includes(elements[e].element.businessObject.get('messageItems'))){
-          messageAttributeStruct.keyMapping=web3.utils.padRight(web3.utils.asciiToHex(elements[e].element.businessObject.get('messageItems')[0].name),64);
-          elements[e].element.businessObject.get('attributeItems').forEach((attrbute)=>{
-            messageAttributeStruct.attributes.push(web3.utils.padRight(web3.utils.asciiToHex(attrbute.name),64))
+        if (elements[e].element.businessObject.get('messageItems').length>0){
+          let splitString=elements[e].element.businessObject.get('messageItems')[0].name.split("(");
+          messageAttributeStruct.keyMapping=web3.utils.padRight(web3.utils.asciiToHex(splitString[0]),64);
+          let splitCut=splitString[1].substring(0,splitString[1].length-1).split(",");
+          splitCut.forEach((e)=>{
+            messageAttributeStruct.attributes.push(web3.utils.padRight(web3.utils.asciiToHex(e),64));
           })
-          messageAttributesList.push(messageAttributeStruct)
-          messageAttributesListKey.push(elements[e].element.businessObject.get('messageItems')[0].name)
+          messageAttributesList.push(messageAttributeStruct);
+        }else{
+          //TODO how store the messagge and the attrbutes in the case of composition
+          //we thought about a sigle key mapping for all attributes but we have multiple key mapping (one for each messages) 
+          //for all the attributes 
+          if(messageAttributesList.length==0){
+            if(elements[e].element.businessObject.$parent.get('rootElements').find(e => e.$type === 'bpmn:Choreography')){
+              let attributes=elements[e].element.businessObject.$parent.get('rootElements').find(e => e.$type === 'bpmn:Choreography').attributeItems.map(item=>item.name).map(item=>web3.utils.padRight(web3.utils.asciiToHex(item),64));
+              let keyMappings=elements[e].element.businessObject.$parent.get('rootElements').find(e => e.$type === 'bpmn:Choreography').messageItems.map(item=>item.name).map(item=>web3.utils.padRight(web3.utils.asciiToHex(item),64));
+            
+                keyMappings.forEach((element)=>{
+                  messageAttributeStruct.keyMapping=element;
+                  messageAttributeStruct.attributes=attributes;
+                  messageAttributesList.push(messageAttributeStruct);
+                })
+            }
+          }
         }
       }else if(elements[e].element.type.includes("Event") ||elements[e].element.type.includes("Gateway")){
-        // console.log(elements[e].element)
+        
         let typeList=["bpmn:StartEvent","bpmn:ExclusiveGateway","bpmn:EndEvent","bpmn:ParallelGateway","bpmn:EventBasedGateway"]
         let controlFlowElement={
           id:"",
-          type:"",
+          tipo:"",
           incomingActivity:[],
           outgoingActivity:[],
           executed:false
@@ -213,23 +231,23 @@ document.addEventListener('DOMContentLoaded', async () => {
         const asciiResult=web3.utils.asciiToHex(elements[e].element.id);
         controlFlowElement.id=web3.utils.padRight(asciiResult,64)
         if(elements[e].element.type.includes("bpmn:StartEvent")){
-          controlFlowElement.type="0"
+          controlFlowElement.tipo="0"
         }else if(elements[e].element.type.includes("bpmn:ExclusiveGateway")){
-          if(elements[e].element.businessObject.name="SPLIT"){
-            controlFlowElement.type="1"
-          }else{
-            controlFlowElement.type="2"
+          if(elements[e].element.businessObject.incoming.length==1 && elements[e].element.businessObject.outgoing.length>1 ){
+            controlFlowElement.tipo="1"
+          }else if(elements[e].element.businessObject.incoming.length>1 && elements[e].element.businessObject.outgoing.length==1 ){
+            controlFlowElement.tipo="2"
           }
         }else if(elements[e].element.type.includes("bpmn:ParallelGateway")){
-          if(elements[e].element.businessObject.name="SPLIT"){
-            controlFlowElement.type="3"
-          }else{
-            controlFlowElement.type="4"
+          if(elements[e].element.businessObject.incoming.length==1 && elements[e].element.businessObject.outgoing.length>1 ){
+            controlFlowElement.tipo="3"
+          }else if(elements[e].element.businessObject.incoming.length>1 && elements[e].element.businessObject.outgoing.length==1){
+            controlFlowElement.tipo="4"
           }
         }else if(elements[e].element.type.includes("bpmn:EventBasedGateway")){
-          controlFlowElement.type="5"
+          controlFlowElement.tipo="5"
         }else if(elements[e].element.type.includes("bpmn:EndEvent")){
-          controlFlowElement.type="6"
+          controlFlowElement.tipo="6"
         }
         if(elements[e].element.businessObject.outgoing){
           elements[e].element.businessObject.outgoing.forEach((ref)=>{
@@ -242,26 +260,35 @@ document.addEventListener('DOMContentLoaded', async () => {
           })
         }
         controlFlowElementList.push(controlFlowElement);
+      }else if(elements[e].element.type.includes("bpmn:SequenceFlow")){
+        let edgeCondition={
+          attribute:"",
+          comparisonValue:"",
+          condition:"",
+          idActivity:""
+        }
+        if(elements[e].element.businessObject.name){
+          console.log(elements[e].element.businessObject.name)
+          let condtionType=["GREATER","LESS","EQUAL","GREATEREQUAL","LESSEQUAL"]
+          let stringcondition=elements[e].element.businessObject.name.split(" ");
+          edgeCondition.attribute=web3.utils.padRight(web3.utils.asciiToHex(stringcondition[0]),64);
+          edgeCondition.comparisonValue=web3.utils.padRight(web3.utils.asciiToHex(stringcondition[2]),64);
+          edgeCondition.condition=condtionType.indexOf(stringcondition[1].toUpperCase())
+          if(elements[e].element.businessObject.targetRef.$type){
+            edgeCondition.idActivity=web3.utils.padRight(web3.utils.asciiToHex(elements[e].element.businessObject.targetRef.id),64);
+          }
+          edgeConditionList.push(edgeCondition)
+        }
       }
     }
     // console.log(messageAttributesList)
     // console.log(participantList)
     let activityResult="[";
     activityList.forEach((element)=>{
-      activityResult+=JSON.stringify([
-        element.id,
-        element.name,
-        element.initiator,
-        element.target,
-        element.idInElement,
-        element.idOutElement,
-        element.messageIn,
-        element.messageOut,
-        element.executed
-      ])+","
+      
     })
     activityResult=activityResult.substring(0,activityResult.length-1)
-    activityResult+="],"
+    activityResult+="]"
     let messaggesResult="[";
     messagges.forEach(element=>{
       messaggesResult+=JSON.stringify([
@@ -276,7 +303,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       ])+","
     })
     messaggesResult=messaggesResult.substring(0,messaggesResult.length-1);
-    messaggesResult+="],";
+    messaggesResult+="]";
     let participantListResult="[";
     participantList.forEach(element=>{
       participantListResult+=JSON.stringify([
@@ -285,7 +312,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       ])+","
     })
     participantListResult=participantListResult.substring(0,participantListResult.length-1);
-    participantListResult+="],";
+    participantListResult+="]";
     let messageAttributesResult="[";
     messageAttributesList.forEach((element)=>{
       messageAttributesResult+=JSON.stringify([
@@ -294,8 +321,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       ])+","
     })
     messageAttributesResult=messageAttributesResult.substring(0,messageAttributesResult.length-1);
-    messageAttributesResult+="],";
-    console.log(messageAttributesResult)
+    messageAttributesResult+="]";
     let controlFlowElementListResult="[";
     controlFlowElementList.forEach((element)=>{
       controlFlowElementListResult+=JSON.stringify([
@@ -307,11 +333,21 @@ document.addEventListener('DOMContentLoaded', async () => {
       ])+","
     })
     controlFlowElementListResult=controlFlowElementListResult.substring(0,controlFlowElementListResult.length-1);
-    controlFlowElementListResult+="],";
+    controlFlowElementListResult+="]";
     let edgeConditionResult="[]";
     let totalResult;
     totalResult=activityResult+messaggesResult+participantListResult+messageAttributesResult+controlFlowElementListResult+edgeConditionResult;
-    console.log(totalResult)
+    // console.log(totalResult)
+    // console.log(controlFlowElementListResult)
+    console.log(activityList)
+    console.log(messagges)
+    console.log(participantList)
+    console.log(messageAttributesList)
+    console.log(controlFlowElementList)
+    console.log(edgeConditionList)
+
+    //TODO metodo Web3 per leggere l'address direttamente 
+    await contract.methods.setInformation(activityList,messagges,participantList,messageAttributesList,controlFlowElementList,edgeConditionList).send({from:"0x667f2CB90a866B10F6056a873C2DdAeA21ebD64F"})
   })
 
   // create new diagram
