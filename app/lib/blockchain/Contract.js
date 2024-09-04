@@ -374,6 +374,11 @@ export const contractAbi = [
 	{
 		"inputs": [
 			{
+				"internalType": "bytes32[]",
+				"name": "attributi",
+				"type": "bytes32[]"
+			},
+			{
 				"internalType": "bytes32",
 				"name": "idActivity",
 				"type": "bytes32"
@@ -397,11 +402,6 @@ export const contractAbi = [
 				"internalType": "address",
 				"name": "target",
 				"type": "address"
-			},
-			{
-				"internalType": "bytes32[]",
-				"name": "attributi",
-				"type": "bytes32[]"
 			},
 			{
 				"internalType": "bytes32[]",
@@ -450,44 +450,6 @@ export const contractAbi = [
 			}
 		],
 		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "bytes32",
-				"name": "idMessage",
-				"type": "bytes32"
-			}
-		],
-		"name": "getListSelectedAttribute",
-		"outputs": [
-			{
-				"internalType": "bytes32[]",
-				"name": "",
-				"type": "bytes32[]"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "n",
-				"type": "uint256"
-			}
-		],
-		"name": "intToBytes",
-		"outputs": [
-			{
-				"internalType": "bytes32",
-				"name": "",
-				"type": "bytes32"
-			}
-		],
-		"stateMutability": "pure",
 		"type": "function"
 	},
 	{
@@ -937,4 +899,4 @@ export const contractAbi = [
 	}
 ];
 
-export const contractAddress = '0x9790a315B3491cE922A00a03D9105479Ade7CccC';
+export const contractAddress = '0x9627F1D58Fe42B8a868c0625d753a13f0B3EeB66';

@@ -17,17 +17,6 @@ export default function addSelectionProps(group, element, bpmnFactory, translate
     addLabel: 'Add Message',
     businessObjectProperty: 'messageItems',
     type: 'loose:MessageValue',
-    buttonAction:{
-      name:"buttonAction",
-      method:(e)=>{
-        e.preventDefault()
-        console.log("action")
-      }
-    },
-    buttonShow:{
-      name:"buttonShow",
-      method:console.log("Show")
-    }
   });
 
 

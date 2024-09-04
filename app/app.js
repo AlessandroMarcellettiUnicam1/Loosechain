@@ -5,7 +5,7 @@ import PropertiesProviderModule from './lib/provider';
 
 import looseValuesModdleDescriptor from './lib/descriptors/loose-values.json';
 
-import xml from './diagrams/diagram_xml.bpmn';
+import xml from './diagrams/diagram_attrSelected.bpmn';
 import blankXml from './diagrams/newDiagram.bpmn';
 
 import connectToBlockchain from './lib/blockchain/connection';
@@ -104,9 +104,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   //upload information into contract 
   document.getElementById('js-smart-contract').addEventListener('click',async() =>{
 
-    console.log("cia9")
+
     const elements=modeler.get('elementRegistry')["_elements"];
- 
     let activityList=[];
     
     let controlFlowElementList=[];
@@ -119,7 +118,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     let participantList=[];
     let edgeConditionList=[];
     for(const e in elements){
-
+      
       if(elements[e].element.type.includes("Task")){
         let activity={
           id:"",
@@ -137,8 +136,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         activity.name=web3.utils.padRight(asciiResult,64)
         activity.initiator=web3.utils.padRight(web3.utils.asciiToHex(elements[e].element.businessObject.participantRef[0].id),64);
         activity.target=web3.utils.padRight(web3.utils.asciiToHex(elements[e].element.businessObject.participantRef[1].id),64);
-        activity.idInElement=web3.utils.padRight(web3.utils.asciiToHex(elements[e].element.businessObject.incoming[0].sourceRef.id),64);
-        activity.idOutElement=web3.utils.padRight(web3.utils.asciiToHex(elements[e].element.businessObject.outgoing[0].targetRef.id),64);
+        console.log(elements[e].element.businessObject.incoming)
+        if(elements[e].element.businessObject.incoming){
+          activity.idInElement=web3.utils.padRight(web3.utils.asciiToHex(elements[e].element.businessObject.incoming[0].sourceRef.id),64);
+        }else{
+          activity.idInElement=web3.utils.padRight(0,64);
+        }
+        if(elements[e].element.businessObject.outgoing){
+          activity.idOutElement=web3.utils.padRight(web3.utils.asciiToHex(elements[e].element.businessObject.outgoing[0].targetRef.id),64);
+        }else{
+          activity.idOutElement=web3.utils.padRight(0,64);
+        }
         if(elements[e].element.businessObject.messageFlowRef[1]){
           activity.messageIn=web3.utils.padRight(web3.utils.asciiToHex(elements[e].element.businessObject.messageFlowRef[1].messageRef.id),64);
           activity.messageOut=web3.utils.padRight(web3.utils.asciiToHex(elements[e].element.businessObject.messageFlowRef[0].messageRef.id),64);
@@ -268,7 +276,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           idActivity:""
         }
         if(elements[e].element.businessObject.name){
-          console.log(elements[e].element.businessObject.name)
+
           let condtionType=["GREATER","LESS","EQUAL","GREATEREQUAL","LESSEQUAL"]
           let stringcondition=elements[e].element.businessObject.name.split(" ");
           edgeCondition.attribute=web3.utils.padRight(web3.utils.asciiToHex(stringcondition[0]),64);
@@ -347,7 +355,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.log(edgeConditionList)
 
     //TODO metodo Web3 per leggere l'address direttamente 
-    await contract.methods.setInformation(activityList,messagges,participantList,messageAttributesList,controlFlowElementList,edgeConditionList).send({from:"0x667f2CB90a866B10F6056a873C2DdAeA21ebD64F"})
+    await contract.methods.setInformation(activityList,messagges,participantList,messageAttributesList,controlFlowElementList,edgeConditionList).send({from:"0xD8d3683EA59d8AB2af961DA41af971e2A1d62fA0"})
   })
 
   // create new diagram
