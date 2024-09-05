@@ -106,14 +106,17 @@ async function buttonExecutePressedSelection(businessObject) {
         if (businessObject.id.includes(e.messageFlowRef[0].messageRef.id)) {
           flag=false;
           selectionStruct.idActivity = web3.utils.padRight(web3.utils.asciiToHex(e.id), 64);
+          tempActivity=e;
         } else {
           if (businessObject.id.includes(e.messageFlowRef[1].messageRef.id)) {
+            tempActivity=e;
             flag=false;
             selectionStruct.idActivity = web3.utils.padRight(web3.utils.asciiToHex(e.id), 64);
           }
         }
       } else {
         if (businessObject.id.includes(e.messageFlowRef[0].messageRef.id)) {
+          tempActivity=e;
           flag=false;
           selectionStruct.idActivity = web3.utils.padRight(web3.utils.asciiToHex(e.id), 64);
         }
@@ -123,15 +126,14 @@ async function buttonExecutePressedSelection(businessObject) {
   let stringAttributes = businessObject.name.split("(");
   selectionStruct.idMessage = web3.utils.padRight(web3.utils.asciiToHex(businessObject.id), 64);
   selectionStruct.keyMapping = web3.utils.padRight(web3.utils.asciiToHex(stringAttributes[0]), 64);
-  selectionStruct.source = "0xf9F784267A3B39b926B9A98281CA22f0E5D11Baf"
-  selectionStruct.target = "0xf9F784267A3B39b926B9A98281CA22f0E5D11Baf"
+  selectionStruct.source = tempActivity.participantRef[0].$attrs.participantType
+  selectionStruct.target = tempActivity.participantRef[1].$attrs.participantType
   stringAttributes[1].substring(0, stringAttributes[1].length - 1).split(",").forEach((attr) => {
     selectionStruct.attributi.push(web3.utils.padRight(web3.utils.asciiToHex(attr), 64))
   })
   businessObject.attributeValues.split(";").forEach((value) => {
     selectionStruct.value.push(web3.utils.padRight(web3.utils.asciiToHex(value), 64))
   })
-  console.log(selectionStruct)
   await contract.methods.executeSelectMessage(selectionStruct.attributi, selectionStruct.idActivity, selectionStruct.idMessage, selectionStruct.keyMapping, selectionStruct.source, selectionStruct.target, selectionStruct.value).send({ from: "0xD8d3683EA59d8AB2af961DA41af971e2A1d62fA0" })
 
 }
