@@ -114,6 +114,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     //TODO: figure out how to pass the address to the front-end for the participant list 
     let addressKeyMappingList=[];
     let participantList=[];
+    let keyMappingParticipants=[];
     let edgeConditionList=[];
     for(const e in elements){
       
@@ -153,10 +154,8 @@ document.addEventListener('DOMContentLoaded', async () => {
           activity.messageOut=web3.utils.padRight(0,64);
         }
         activityList.push(activity);
-        let participantRoles={
-          keyMapping:"",
-          addr:[]
-        }
+       
+        if(elements[e].element.businessObject.participantRef[0].participantItems){
           if (!addressKeyMappingList.includes(activity.initiator)){
             participantRoles.keyMapping=activity.initiator;
             elements[e].element.businessObject.participantRef[0].participantItems.forEach(e=>{
@@ -171,6 +170,24 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
             addressKeyMappingList.push(activity.target);
           }
+        }else if(participantList.length<1){
+          let participantAddress=[];
+          elements[e].element.businessObject.$parent.participantItems.forEach(e=>{
+            participantAddress.push(e.name)
+          })
+          elements[e].element.businessObject.$parent.participants.forEach(e=>{
+            if(!keyMappingParticipants.includes(e.name)){
+              keyMappingParticipants.push(e.name);
+              participantList.push({
+                addr:participantAddress,
+                keyMapping:web3.utils.padRight(web3.utils.asciiToHex(e.name),64)
+              })
+            }
+          })
+
+
+        }
+
           //TODO List of message attributes 
       }else if(elements[e].element.type.includes("Message")){
         // console.log(elements[e].element) 
@@ -188,8 +205,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         message.id=web3.utils.padRight(asciiResult,64)
         message.name=web3.utils.padRight(asciiResult,64)
         message.mappingKey=web3.utils.padRight(0,64);
-        message.sourceParticipant="0xD8d3683EA59d8AB2af961DA41af971e2A1d62fA0";
-        message.targetParticipant="0xD8d3683EA59d8AB2af961DA41af971e2A1d62fA0";
+
+        message.sourceParticipant="0x0000000000000000000000000000000000000000";
+        message.targetParticipant="0x0000000000000000000000000000000000000000";
         activityList.forEach((e)=>{
           if(e.messageIn.includes(message.id)){
             message.idActivity=e.id;
@@ -220,9 +238,10 @@ document.addEventListener('DOMContentLoaded', async () => {
               let keyMappings=elements[e].element.businessObject.$parent.get('rootElements').find(e => e.$type === 'bpmn:Choreography').messageItems.map(item=>item.name).map(item=>web3.utils.padRight(web3.utils.asciiToHex(item),64));
             
                 keyMappings.forEach((element)=>{
-                  messageAttributeStruct.keyMapping=element;
-                  messageAttributeStruct.attributes=attributes;
-                  messageAttributesList.push(messageAttributeStruct);
+                  messageAttributesList.push({
+                    attributes:attributes,
+                    keyMapping:element
+                  });
                 })
             }
           }
@@ -348,23 +367,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     // totalResult=activityResult+messaggesResult+participantListResult+messageAttributesResult+controlFlowElementListResult+edgeConditionResult;
     // console.log(totalResult)
     // console.log(controlFlowElementListResult)
-    let resultParticipant=""
-    participantList.forEach(element=>{
-      resultParticipant+=JSON.stringify([
-        element.addr,
-        element.keyMapping
-      ])
-    })
-    console.log(resultParticipant)
+
     console.log(activityList)
     console.log(messagges)
     console.log(participantList)
     console.log(messageAttributesList)
     console.log(controlFlowElementList)
     console.log(edgeConditionList)
+    console.log(keyMappingParticipants)
 
     //TODO metodo Web3 per leggere l'address direttamente 
-    await contract.methods.setInformation(activityList,messagges,participantList,messageAttributesList,controlFlowElementList,edgeConditionList).send({from:"0xD8d3683EA59d8AB2af961DA41af971e2A1d62fA0"})
+    await contract.methods.setInformation(activityList,messagges,participantList,messageAttributesList,controlFlowElementList,edgeConditionList).send({from:"0xcCAC66062051Ac9E445A2b59B239938483F88E70"})
   })
 
   // create new diagram

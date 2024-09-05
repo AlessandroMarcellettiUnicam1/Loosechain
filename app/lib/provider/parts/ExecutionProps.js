@@ -77,16 +77,14 @@ function addMessageProps(group, businessObject, translate) {
       html: connectParticipants(),
       modelProperty: "tortellini",
       execute: function () {
-        buttonExecutePressedSelection(businessObject)
+        buttonExecutePressedComposition(businessObject)
       }
     }
   );
   // }
 
 }
-function getBusinessObjectName(messageItem){
-  return 'Name'+messageItem;
-}
+
 async function buttonExecutePressedSelection(businessObject) {
   const contract = await connectToBlockchain();
   let selectionStruct = {
@@ -137,7 +135,8 @@ async function buttonExecutePressedSelection(businessObject) {
   await contract.methods.executeSelectMessage(selectionStruct.attributi, selectionStruct.idActivity, selectionStruct.idMessage, selectionStruct.keyMapping, selectionStruct.source, selectionStruct.target, selectionStruct.value).send({ from: "0xD8d3683EA59d8AB2af961DA41af971e2A1d62fA0" })
 
 }
-async function buttonExecutePressed(businessObject) {
+async function buttonExecutePressedComposition(businessObject) {
+  const contract = await connectToBlockchain();
   let tempActivity;
   businessObject.$parent.get('rootElements').find(e => e.$type === 'bpmn:Choreography').flowElements.forEach(e => {
     if (e.$type.includes("bpmn:ChoreographyTask")) {
@@ -171,9 +170,8 @@ async function buttonExecutePressed(businessObject) {
   const asciiResult = web3.utils.asciiToHex(tempActivity.id);
   activity.id = web3.utils.padRight(asciiResult, 64)
   activity.name = web3.utils.padRight(asciiResult, 64)
-  activity.initiator = web3.utils.padRight(web3.utils.asciiToHex(tempActivity.participantRef[0].id), 64);
-  activity.target = web3.utils.padRight(web3.utils.asciiToHex(tempActivity.participantRef[1].id), 64);
-  console.log(tempActivity.incoming)
+  activity.initiator = web3.utils.padRight(web3.utils.asciiToHex(tempActivity.participantRef[0].name), 64);
+  activity.target = web3.utils.padRight(web3.utils.asciiToHex(tempActivity.participantRef[1].name), 64);
   if (tempActivity.incoming) {
     activity.idInElement = web3.utils.padRight(web3.utils.asciiToHex(tempActivity.incoming[0].sourceRef.id), 64);
   } else {
@@ -191,7 +189,6 @@ async function buttonExecutePressed(businessObject) {
     activity.messageIn = web3.utils.padRight(web3.utils.asciiToHex(tempActivity.messageFlowRef[0].messageRef.id), 64);
     activity.messageOut = web3.utils.padRight(0, 64);
   }
-  console.log(activity)
 
   let message = {
     id: "",
@@ -203,14 +200,14 @@ async function buttonExecutePressed(businessObject) {
     idActivity: "",
     executed: false
   }
+  console.log(tempActivity)
 
   const messageAsciiResult = web3.utils.asciiToHex(businessObject.id);
-  console.log(businessObject)
   message.id = web3.utils.padRight(messageAsciiResult, 64)
   message.name = web3.utils.padRight(messageAsciiResult, 64)
-  message.mappingKey = web3.utils.padRight(0, 64);
-  message.sourceParticipant = "0xDc5796010883B712413fC0b97F257d724088eD37";
-  message.targetParticipant = "0xDc5796010883B712413fC0b97F257d724088eD37";
+  message.mappingKey = web3.utils.padRight(web3.utils.asciiToHex(businessObject.$attrs.messageItem), 64);
+  message.sourceParticipant =tempActivity.participantRef[0].$attrs.participantType;
+  message.targetParticipant = tempActivity.participantRef[1].$attrs.participantType;
   message.idActivity = web3.utils.padRight(web3.utils.asciiToHex(tempActivity.id), 64)
   let attributes;
   if (businessObject.$parent.get('rootElements').find(e => e.$type === 'bpmn:Choreography')) {
@@ -222,17 +219,14 @@ async function buttonExecutePressed(businessObject) {
     }
   })
   let selectAttributes = message.selectedAttr;
-  let values = businessObject.attributeValues.split(";");
-  console.log(selectAttributes)
-  console.log(values)
-
-  
-  console.log(tempActivity)
+  let values = [];
+  businessObject.attributeValues.split(";").forEach((e)=>{
+    values.push(web3.utils.padRight(web3.utils.asciiToHex(e), 64))
+  });
   let controlFlowElementList=[]
   if (tempActivity.incoming) {
     tempActivity.incoming.forEach((element) => {
-      let incomingElement=element.source
-
+      let incomingElement=element.sourceRef
       if (incomingElement.$type.includes("Event") || incomingElement.$type.includes("Gateway")) {
         let controlFlowElement = {
           id: "",
@@ -254,28 +248,33 @@ async function buttonExecutePressed(businessObject) {
         } else if (incomingElement.$type.includes("bpmn:ParallelGateway")) {
           if (incomingElement.incoming.length == 1 && incomingElement.outgoing.length > 1) {
             controlFlowElement.tipo = "3"
-          } else if (element.businessObject.incoming.length > 1 && element.businessObject.outgoing.length == 1) {
+          } else if (incomingElement.incoming.length > 1 && incomingElement.outgoing.length == 1) {
             controlFlowElement.tipo = "4"
           }
-        } else if (element.type.includes("bpmn:EventBasedGateway")) {
+        } else if (incomingElement.$type.includes("bpmn:EventBasedGateway")) {
           controlFlowElement.tipo = "5"
-        } else if (element.type.includes("bpmn:EndEvent")) {
+        } else if (incomingElement.$type.includes("bpmn:EndEvent")) {
           controlFlowElement.tipo = "6"
         }
-        if (element.businessObject.outgoing) {
-          element.businessObject.outgoing.forEach((ref) => {
+        if (incomingElement.outgoing) {
+          incomingElement.outgoing.forEach((ref) => {
             controlFlowElement.outgoingActivity.push(web3.utils.padRight(web3.utils.asciiToHex(ref.targetRef.id), 64))
           })
         }
-        if (element.businessObject.incoming) {
-          element.businessObject.incoming.forEach((ref) => {
+        if (incomingElement.incoming) {
+          incomingElement.incoming.forEach((ref) => {
             controlFlowElement.incomingActivity.push(web3.utils.padRight(web3.utils.asciiToHex(ref.sourceRef.id), 64))
           })
         }
         controlFlowElementList.push(controlFlowElement)
       }
   })
+  console.log(activity)
+  console.log(message)
+  console.log(selectAttributes)
+  console.log(values)
   console.log(controlFlowElementList)
+  await contract.methods.executeCompMessage(activity,message, selectAttributes, values, controlFlowElementList,[]).send({ from: "0xcCAC66062051Ac9E445A2b59B239938483F88E70" })
 }
  
   
