@@ -5,197 +5,6 @@
 
 export const contractAbi = [
 	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": false,
-				"internalType": "bytes32",
-				"name": "messaggeId",
-				"type": "bytes32"
-			}
-		],
-		"name": "FunctionDone",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": false,
-				"internalType": "string",
-				"name": "",
-				"type": "string"
-			}
-		],
-		"name": "functionDone",
-		"type": "event"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "bytes32",
-				"name": "",
-				"type": "bytes32"
-			}
-		],
-		"name": "attivita",
-		"outputs": [
-			{
-				"internalType": "bool",
-				"name": "executed",
-				"type": "bool"
-			},
-			{
-				"internalType": "bytes32",
-				"name": "id",
-				"type": "bytes32"
-			},
-			{
-				"internalType": "bytes32",
-				"name": "idInElement",
-				"type": "bytes32"
-			},
-			{
-				"internalType": "bytes32",
-				"name": "idOutElement",
-				"type": "bytes32"
-			},
-			{
-				"internalType": "bytes32",
-				"name": "initiator",
-				"type": "bytes32"
-			},
-			{
-				"internalType": "bytes32",
-				"name": "messageIn",
-				"type": "bytes32"
-			},
-			{
-				"internalType": "bytes32",
-				"name": "messageOut",
-				"type": "bytes32"
-			},
-			{
-				"internalType": "bytes32",
-				"name": "name",
-				"type": "bytes32"
-			},
-			{
-				"internalType": "bytes32",
-				"name": "target",
-				"type": "bytes32"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "bytes32",
-				"name": "",
-				"type": "bytes32"
-			}
-		],
-		"name": "attributiValue",
-		"outputs": [
-			{
-				"internalType": "bytes32",
-				"name": "",
-				"type": "bytes32"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "bytes32",
-				"name": "key",
-				"type": "bytes32"
-			}
-		],
-		"name": "checkKeyMessage",
-		"outputs": [
-			{
-				"internalType": "bool",
-				"name": "",
-				"type": "bool"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "bytes32",
-				"name": "",
-				"type": "bytes32"
-			}
-		],
-		"name": "controlFlowElementList",
-		"outputs": [
-			{
-				"internalType": "bool",
-				"name": "executed",
-				"type": "bool"
-			},
-			{
-				"internalType": "bytes32",
-				"name": "id",
-				"type": "bytes32"
-			},
-			{
-				"internalType": "enum storeElement.ElementType",
-				"name": "tipo",
-				"type": "uint8"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "bytes32",
-				"name": "",
-				"type": "bytes32"
-			},
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"name": "edgeConditionMapping",
-		"outputs": [
-			{
-				"internalType": "bytes32",
-				"name": "attribute",
-				"type": "bytes32"
-			},
-			{
-				"internalType": "bytes32",
-				"name": "comparisonValue",
-				"type": "bytes32"
-			},
-			{
-				"internalType": "enum storeElement.ConditionType",
-				"name": "condition",
-				"type": "uint8"
-			},
-			{
-				"internalType": "bytes32",
-				"name": "idActivity",
-				"type": "bytes32"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
 		"inputs": [
 			{
 				"components": [
@@ -372,182 +181,30 @@ export const contractAbi = [
 		"type": "function"
 	},
 	{
+		"anonymous": false,
 		"inputs": [
 			{
-				"internalType": "bytes32[]",
-				"name": "attributi",
-				"type": "bytes32[]"
-			},
-			{
+				"indexed": false,
 				"internalType": "bytes32",
-				"name": "idActivity",
+				"name": "messaggeId",
 				"type": "bytes32"
-			},
-			{
-				"internalType": "bytes32",
-				"name": "idMessage",
-				"type": "bytes32"
-			},
-			{
-				"internalType": "bytes32",
-				"name": "keyMapping",
-				"type": "bytes32"
-			},
-			{
-				"internalType": "address",
-				"name": "source",
-				"type": "address"
-			},
-			{
-				"internalType": "address",
-				"name": "target",
-				"type": "address"
-			},
-			{
-				"internalType": "bytes32[]",
-				"name": "value",
-				"type": "bytes32[]"
 			}
 		],
-		"name": "executeSelectMessage",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
+		"name": "FunctionDone",
+		"type": "event"
 	},
 	{
+		"anonymous": false,
 		"inputs": [
 			{
-				"internalType": "bytes32",
-				"name": "key",
-				"type": "bytes32"
-			}
-		],
-		"name": "getListAttributeForKey",
-		"outputs": [
-			{
-				"internalType": "bytes32[]",
+				"indexed": false,
+				"internalType": "string",
 				"name": "",
-				"type": "bytes32[]"
+				"type": "string"
 			}
 		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "bytes32",
-				"name": "key",
-				"type": "bytes32"
-			}
-		],
-		"name": "getListParticipant",
-		"outputs": [
-			{
-				"internalType": "address[]",
-				"name": "",
-				"type": "address[]"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "bytes32",
-				"name": "",
-				"type": "bytes32"
-			},
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"name": "messageAttributes",
-		"outputs": [
-			{
-				"internalType": "bytes32",
-				"name": "",
-				"type": "bytes32"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "bytes32",
-				"name": "",
-				"type": "bytes32"
-			}
-		],
-		"name": "messaggi",
-		"outputs": [
-			{
-				"internalType": "bool",
-				"name": "executed",
-				"type": "bool"
-			},
-			{
-				"internalType": "bytes32",
-				"name": "id",
-				"type": "bytes32"
-			},
-			{
-				"internalType": "bytes32",
-				"name": "idActivity",
-				"type": "bytes32"
-			},
-			{
-				"internalType": "bytes32",
-				"name": "mappingKey",
-				"type": "bytes32"
-			},
-			{
-				"internalType": "bytes32",
-				"name": "name",
-				"type": "bytes32"
-			},
-			{
-				"internalType": "address",
-				"name": "sourceParticipant",
-				"type": "address"
-			},
-			{
-				"internalType": "address",
-				"name": "targetParticipant",
-				"type": "address"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "bytes32",
-				"name": "",
-				"type": "bytes32"
-			},
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"name": "participants",
-		"outputs": [
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
+		"name": "functionDone",
+		"type": "event"
 	},
 	{
 		"inputs": [
@@ -868,23 +525,157 @@ export const contractAbi = [
 		"inputs": [
 			{
 				"internalType": "bytes32",
-				"name": "idMessage",
+				"name": "",
+				"type": "bytes32"
+			}
+		],
+		"name": "attivita",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "executed",
+				"type": "bool"
+			},
+			{
+				"internalType": "bytes32",
+				"name": "id",
 				"type": "bytes32"
 			},
 			{
 				"internalType": "bytes32",
-				"name": "keyMapping",
+				"name": "idInElement",
 				"type": "bytes32"
 			},
 			{
-				"internalType": "address",
-				"name": "source",
-				"type": "address"
+				"internalType": "bytes32",
+				"name": "idOutElement",
+				"type": "bytes32"
 			},
 			{
-				"internalType": "address",
+				"internalType": "bytes32",
+				"name": "initiator",
+				"type": "bytes32"
+			},
+			{
+				"internalType": "bytes32",
+				"name": "messageIn",
+				"type": "bytes32"
+			},
+			{
+				"internalType": "bytes32",
+				"name": "messageOut",
+				"type": "bytes32"
+			},
+			{
+				"internalType": "bytes32",
+				"name": "name",
+				"type": "bytes32"
+			},
+			{
+				"internalType": "bytes32",
 				"name": "target",
-				"type": "address"
+				"type": "bytes32"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "bytes32",
+				"name": "",
+				"type": "bytes32"
+			}
+		],
+		"name": "attributiValue",
+		"outputs": [
+			{
+				"internalType": "bytes32",
+				"name": "",
+				"type": "bytes32"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "bytes32",
+				"name": "key",
+				"type": "bytes32"
+			}
+		],
+		"name": "checkKeyMessage",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "bytes32",
+				"name": "",
+				"type": "bytes32"
+			}
+		],
+		"name": "controlFlowElementList",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "executed",
+				"type": "bool"
+			},
+			{
+				"internalType": "bytes32",
+				"name": "id",
+				"type": "bytes32"
+			},
+			{
+				"internalType": "enum storeElement.ElementType",
+				"name": "tipo",
+				"type": "uint8"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "bytes32",
+				"name": "",
+				"type": "bytes32"
+			},
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "edgeConditionMapping",
+		"outputs": [
+			{
+				"internalType": "bytes32",
+				"name": "attribute",
+				"type": "bytes32"
+			},
+			{
+				"internalType": "bytes32",
+				"name": "comparisonValue",
+				"type": "bytes32"
+			},
+			{
+				"internalType": "enum storeElement.ConditionType",
+				"name": "condition",
+				"type": "uint8"
 			},
 			{
 				"internalType": "bytes32",
@@ -892,11 +683,144 @@ export const contractAbi = [
 				"type": "bytes32"
 			}
 		],
-		"name": "setSelecMessage",
-		"outputs": [],
-		"stateMutability": "nonpayable",
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "bytes32",
+				"name": "key",
+				"type": "bytes32"
+			}
+		],
+		"name": "getListAttributeForKey",
+		"outputs": [
+			{
+				"internalType": "bytes32[]",
+				"name": "",
+				"type": "bytes32[]"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "bytes32",
+				"name": "key",
+				"type": "bytes32"
+			}
+		],
+		"name": "getListParticipant",
+		"outputs": [
+			{
+				"internalType": "address[]",
+				"name": "",
+				"type": "address[]"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "bytes32",
+				"name": "",
+				"type": "bytes32"
+			},
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "messageAttributes",
+		"outputs": [
+			{
+				"internalType": "bytes32",
+				"name": "",
+				"type": "bytes32"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "bytes32",
+				"name": "",
+				"type": "bytes32"
+			}
+		],
+		"name": "messaggi",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "executed",
+				"type": "bool"
+			},
+			{
+				"internalType": "bytes32",
+				"name": "id",
+				"type": "bytes32"
+			},
+			{
+				"internalType": "bytes32",
+				"name": "idActivity",
+				"type": "bytes32"
+			},
+			{
+				"internalType": "bytes32",
+				"name": "mappingKey",
+				"type": "bytes32"
+			},
+			{
+				"internalType": "bytes32",
+				"name": "name",
+				"type": "bytes32"
+			},
+			{
+				"internalType": "address",
+				"name": "sourceParticipant",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "targetParticipant",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "bytes32",
+				"name": "",
+				"type": "bytes32"
+			},
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "participants",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
 		"type": "function"
 	}
 ];
 
-export const contractAddress = '0x9627F1D58Fe42B8a868c0625d753a13f0B3EeB66';
+export const contractAddress = '0xf55C820E58bc8FF6ce3Fc0f0AFf43984239C35e9';

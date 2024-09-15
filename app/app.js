@@ -5,7 +5,7 @@ import PropertiesProviderModule from './lib/provider';
 
 import looseValuesModdleDescriptor from './lib/descriptors/loose-values.json';
 
-import xml from './diagrams/testComp.bpmn';
+import xml from './diagrams/diagram_compError.bpmn';
 import blankXml from './diagrams/newDiagram.bpmn';
 
 import connectToBlockchain from './lib/blockchain/connection';
@@ -136,12 +136,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         activity.name=web3.utils.padRight(asciiResult,64)
         activity.initiator=web3.utils.padRight(web3.utils.asciiToHex(elements[e].element.businessObject.participantRef[0].name),64);
         activity.target=web3.utils.padRight(web3.utils.asciiToHex(elements[e].element.businessObject.participantRef[1].name),64);
-        if(elements[e].element.businessObject.incoming){
+        if(elements[e].element.businessObject.incoming && elements[e].element.businessObject.incoming.length>0){
           activity.idInElement=web3.utils.padRight(web3.utils.asciiToHex(elements[e].element.businessObject.incoming[0].sourceRef.id),64);
         }else{
           activity.idInElement=web3.utils.padRight(0,64);
         }
-        if(elements[e].element.businessObject.outgoing){
+
+        if(elements[e].element.businessObject.outgoing && elements[e].element.businessObject.outgoing.length>0){
           activity.idOutElement=web3.utils.padRight(web3.utils.asciiToHex(elements[e].element.businessObject.outgoing[0].targetRef.id),64);
         }else{
           activity.idOutElement=web3.utils.padRight(0,64);
@@ -156,18 +157,19 @@ document.addEventListener('DOMContentLoaded', async () => {
         activityList.push(activity);
        
         if(elements[e].element.businessObject.participantRef[0].participantItems){
+          console.log(elements[e].element.businessObject)
           if (!addressKeyMappingList.includes(activity.initiator)){
-            participantRoles.keyMapping=activity.initiator;
-            elements[e].element.businessObject.participantRef[0].participantItems.forEach(e=>{
-              participantRoles.addr.push(e.name);
-            });
-            participantList.push(participantRoles)
+            participantList.push({
+              keyMapping:activity.initiator,
+              addr:elements[e].element.businessObject.participantRef[0].participantItems.map(e=>e.name)
+            })
             addressKeyMappingList.push(activity.initiator)
-          }else if(!addressKeyMappingList.includes(activity.target)){
-            participantRoles.keyMapping=activity.target;
-            elements[e].element.businessObject.participantRef[1].participantItems.forEach(e=>{
-              participantRoles.addr.push(e.name);
-            });
+          }
+          if(!addressKeyMappingList.includes(activity.target)){
+            participantList.push({
+              keyMapping:activity.target,
+              addr:elements[e].element.businessObject.participantRef[1].participantItems.map(e=>e.name)
+          })
             addressKeyMappingList.push(activity.target);
           }
         }else if(participantList.length<1){
@@ -247,7 +249,6 @@ document.addEventListener('DOMContentLoaded', async () => {
           }
         }
       }else if(elements[e].element.type.includes("Event") ||elements[e].element.type.includes("Gateway")){
-        
         let typeList=["bpmn:StartEvent","bpmn:ExclusiveGateway","bpmn:EndEvent","bpmn:ParallelGateway","bpmn:EventBasedGateway"]
         let controlFlowElement={
           id:"",
@@ -261,10 +262,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         if(elements[e].element.type.includes("bpmn:StartEvent")){
           controlFlowElement.tipo="0"
         }else if(elements[e].element.type.includes("bpmn:ExclusiveGateway")){
-          if(elements[e].element.businessObject.incoming.length==1 && elements[e].element.businessObject.outgoing.length>1 ){
+          if(elements[e].element.businessObject.incoming && elements[e].element.businessObject.incoming.length==1 && elements[e].element.businessObject.outgoing.length>1 ){
             controlFlowElement.tipo="1"
-          }else if(elements[e].element.businessObject.incoming.length>1 && elements[e].element.businessObject.outgoing.length==1 ){
+          }else if(elements[e].element.businessObject.incoming && elements[e].element.businessObject.incoming.length>1 && elements[e].element.businessObject.outgoing.length==1 ){
             controlFlowElement.tipo="2"
+          }else{
+            controlFlowElement.tipo="7"
           }
         }else if(elements[e].element.type.includes("bpmn:ParallelGateway")){
           if(elements[e].element.businessObject.incoming.length==1 && elements[e].element.businessObject.outgoing.length>1 ){
@@ -296,7 +299,6 @@ document.addEventListener('DOMContentLoaded', async () => {
           idActivity:""
         }
         if(elements[e].element.businessObject.name){
-
           let condtionType=["GREATER","LESS","EQUAL","GREATEREQUAL","LESSEQUAL"]
           let stringcondition=elements[e].element.businessObject.name.split(" ");
           edgeCondition.attribute=web3.utils.padRight(web3.utils.asciiToHex(stringcondition[0]),64);
@@ -374,7 +376,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.log(messageAttributesList)
     console.log(controlFlowElementList)
     console.log(edgeConditionList)
-    console.log(keyMappingParticipants)
 
     //TODO metodo Web3 per leggere l'address direttamente 
     await contract.methods.setInformation(activityList,messagges,participantList,messageAttributesList,controlFlowElementList,edgeConditionList).send({from:"0xcCAC66062051Ac9E445A2b59B239938483F88E70"})
