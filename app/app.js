@@ -5,7 +5,7 @@ import PropertiesProviderModule from './lib/provider';
 
 import looseValuesModdleDescriptor from './lib/descriptors/loose-values.json';
 
-import xml from './diagrams/diagram_compError.bpmn';
+import xml from './diagrams/SelectionCase01.bpmn';
 import blankXml from './diagrams/newDiagram.bpmn';
 
 import connectToBlockchain from './lib/blockchain/connection';
@@ -116,8 +116,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     let participantList=[];
     let keyMappingParticipants=[];
     let edgeConditionList=[];
+    let subChoreographyList=[];
+
     for(const e in elements){
-      
       if(elements[e].element.type.includes("Task")){
         let activity={
           id:"",
@@ -128,7 +129,8 @@ document.addEventListener('DOMContentLoaded', async () => {
           idOutElement:"",
           messageIn:"",
           messageOut:"",
-          executed:false
+          executed:false,
+          tempState:false
         }
         
         const asciiResult=web3.utils.asciiToHex(elements[e].element.id);
@@ -155,9 +157,10 @@ document.addEventListener('DOMContentLoaded', async () => {
           activity.messageOut=web3.utils.padRight(0,64);
         }
         activityList.push(activity);
-       
+        console.log(elements[e].element)
         if(elements[e].element.businessObject.participantRef[0].participantItems){
           console.log(elements[e].element.businessObject)
+
           if (!addressKeyMappingList.includes(activity.initiator)){
             participantList.push({
               keyMapping:activity.initiator,
@@ -166,6 +169,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             addressKeyMappingList.push(activity.initiator)
           }
           if(!addressKeyMappingList.includes(activity.target)){
+
             participantList.push({
               keyMapping:activity.target,
               addr:elements[e].element.businessObject.participantRef[1].participantItems.map(e=>e.name)
@@ -174,6 +178,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           }
         }else if(participantList.length<1){
           let participantAddress=[];
+          
           elements[e].element.businessObject.$parent.participantItems.forEach(e=>{
             participantAddress.push(e.name)
           })
@@ -201,7 +206,8 @@ document.addEventListener('DOMContentLoaded', async () => {
           sourceParticipant:"",
           targetParticipant:"",
           idActivity:"",
-          executed:false
+          executed:false,
+          tempState:false
         }
         const asciiResult=web3.utils.asciiToHex(elements[e].element.id);
         message.id=web3.utils.padRight(asciiResult,64)
@@ -309,6 +315,20 @@ document.addEventListener('DOMContentLoaded', async () => {
           }
           edgeConditionList.push(edgeCondition)
         }
+      }else if(elements[e].element.type.includes("bpmn:SubChoreography")){
+        let elementContained=elements[e].element.businessObject.flowElements.
+        filter(e=>e.$type.includes("bpmn:SequenceFlow")||
+              e.$type.includes("Event")||
+              e.$type.includes("Gateway")||
+              e.$type.includes("Message")||
+              e.$type.includes("Task")).
+        map(e=>web3.utils.padRight(web3.utils.asciiToHex(e.id),64));
+        console.log(elementContained)
+        subChoreographyList.push({
+          executed:false,
+          id:web3.utils.padRight(web3.utils.asciiToHex(elements[e].element.id),64),
+          elementId:elementContained
+        })
       }
     }
     // console.log(messageAttributesList)
@@ -376,9 +396,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.log(messageAttributesList)
     console.log(controlFlowElementList)
     console.log(edgeConditionList)
+    console.log(subChoreographyList)
 
     //TODO metodo Web3 per leggere l'address direttamente 
-    await contract.methods.setInformation(activityList,messagges,participantList,messageAttributesList,controlFlowElementList,edgeConditionList).send({from:"0xcCAC66062051Ac9E445A2b59B239938483F88E70"})
+    await contract.methods.setInformation(activityList,messagges,participantList,messageAttributesList,controlFlowElementList,edgeConditionList,subChoreographyList).send({from:"0xcCAC66062051Ac9E445A2b59B239938483F88E70"})
   })
 
   // create new diagram
