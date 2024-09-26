@@ -5,10 +5,11 @@ import PropertiesProviderModule from './lib/provider';
 
 import looseValuesModdleDescriptor from './lib/descriptors/loose-values.json';
 
-import xml from './diagrams/SelectionCase01.bpmn';
+import xml from './diagrams/SelectionCase.bpmn';
 import blankXml from './diagrams/newDiagram.bpmn';
 
 import connectToBlockchain from './lib/blockchain/connection';
+import { translateDiagram } from './lib/blockchain/Translator.js';
 import setupEventListeners from './lib/blockchain/events';
 import updateUI from './lib/blockchain/uiUpdater';
 
@@ -104,8 +105,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   //upload information into contract 
   document.getElementById('js-smart-contract').addEventListener('click',async() =>{
 
-
-    const elements=modeler.get('elementRegistry')["_elements"];
+    translateDiagram(modeler,contract);
+    /*const elements=modeler.get('elementRegistry')["_elements"];
     let activityList=[];
     
     let controlFlowElementList=[];
@@ -399,7 +400,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.log(subChoreographyList)
 
     //TODO metodo Web3 per leggere l'address direttamente 
-    await contract.methods.setInformation(activityList,messagges,participantList,messageAttributesList,controlFlowElementList,edgeConditionList,subChoreographyList).send({from:"0xcCAC66062051Ac9E445A2b59B239938483F88E70"})
+    await contract.methods.setInformation(activityList,messagges,participantList,messageAttributesList,controlFlowElementList,edgeConditionList,subChoreographyList).send({from:"0xcCAC66062051Ac9E445A2b59B239938483F88E70"})*/
   })
 
   // create new diagram

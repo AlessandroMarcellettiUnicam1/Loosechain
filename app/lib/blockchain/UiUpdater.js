@@ -25,8 +25,6 @@ async function getCurrentState(contract,modeler) {
       result.push(await contract.methods.messaggi(web3.utils.padRight(asciiResult,64)).call());
     }else if(elements[e].element.type.includes("Event") ||elements[e].element.type.includes("Gateway")){
       result.push(await contract.methods.controlFlowElementList(web3.utils.padRight(asciiResult,64)).call());
-    }else if(elements[e].element.type.includes("SubChoreography")){
-      result.push(await contract.methods.subChoList(web3.utils.padRight(asciiResult,64)).call());
     }
   }
   return result;

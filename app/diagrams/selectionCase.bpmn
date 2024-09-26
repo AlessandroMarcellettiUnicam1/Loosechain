@@ -44,12 +44,24 @@
     <loose:messageValue name="possible_emergency(environment_data)" />
   </bpmn2:message>
   <bpmn2:choreography id="EmergencyResponePlan">
-    <bpmn2:participant id="Participant_06qakjv" name="0x1" />
-    <bpmn2:participant id="Participant_0mgz9si" name="0x6" />
-    <bpmn2:participant id="Participant_0537iz2" name="0x2" />
-    <bpmn2:participant id="Participant_0c1yjiz" name="Firefighters" />
-    <bpmn2:participant id="Participant_1u8qqw3" name="Medical Service" />
-    <bpmn2:participant id="Participant_1hpa1s9" name="Police" />
+    <bpmn2:participant id="Participant_06qakjv" name="0x1">
+      <loose:participantValue name="0xcCAC66062051Ac9E445A2b59B239938483F88E70" />
+    </bpmn2:participant>
+    <bpmn2:participant id="Participant_0mgz9si" name="0x6">
+      <loose:participantValue name="0xcCAC66062051Ac9E445A2b59B239938483F88E70" />
+    </bpmn2:participant>
+    <bpmn2:participant id="Participant_0537iz2" name="0x2">
+      <loose:participantValue name="0xcCAC66062051Ac9E445A2b59B239938483F88E70" />
+    </bpmn2:participant>
+    <bpmn2:participant id="Participant_0c1yjiz" name="Firefighters">
+      <loose:participantValue name="0xcCAC66062051Ac9E445A2b59B239938483F88E70" />
+    </bpmn2:participant>
+    <bpmn2:participant id="Participant_1u8qqw3" name="Medical Service">
+      <loose:participantValue name="0xcCAC66062051Ac9E445A2b59B239938483F88E70" />
+    </bpmn2:participant>
+    <bpmn2:participant id="Participant_1hpa1s9" name="Police">
+      <loose:participantValue name="0xcCAC66062051Ac9E445A2b59B239938483F88E70" />
+    </bpmn2:participant>
     <bpmn2:participant id="Participant_0npwmxc" />
     <bpmn2:participant id="Participant_0o3eh43" />
     <bpmn2:messageFlow id="MessageFlow_17mmmcs" sourceRef="Participant_06qakjv" targetRef="Participant_1hpa1s9" messageRef="Message_0bvorml" />
@@ -191,7 +203,7 @@
       <bpmn2:outgoing>Flow_075cqal</bpmn2:outgoing>
       <bpmn2:outgoing>Flow_0hcsor0</bpmn2:outgoing>
     </bpmn2:eventBasedGateway>
-    <bpmn2:sequenceFlow id="Flow_17qrnyy" sourceRef="ExclusiveGateway_136gbik" targetRef="Gateway_1wd7vbb" />
+    <bpmn2:sequenceFlow id="Flow_17qrnyy" name="emergency_decision equal false" sourceRef="ExclusiveGateway_136gbik" targetRef="Gateway_1wd7vbb" />
     <bpmn2:sequenceFlow id="Flow_075cqal" sourceRef="Gateway_1wd7vbb" targetRef="ChoreographyTask_0fp579u" />
     <bpmn2:sequenceFlow id="Flow_0hcsor0" sourceRef="Gateway_1wd7vbb" targetRef="ChoreographyTask_1fylnhi" />
     <bpmn2:sequenceFlow id="Flow_1tmbpzs" sourceRef="SubChoreography_0ldqu8a" targetRef="ExclusiveGateway_0lceem4" />
@@ -328,6 +340,9 @@
       <bpmndi:BPMNEdge id="Flow_17qrnyy_di" bpmnElement="Flow_17qrnyy">
         <di:waypoint x="1275" y="368" />
         <di:waypoint x="1355" y="368" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1271" y="350" width="89" height="27" />
+        </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_075cqal_di" bpmnElement="Flow_075cqal">
         <di:waypoint x="1380" y="393" />

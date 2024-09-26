@@ -125,12 +125,16 @@ export async function buttonExecutePressedComposition(businessObject) {
     activity.target = web3.utils.padRight(web3.utils.asciiToHex(tempActivity.participantRef[1].name), 64);
     if (tempActivity.incoming) {
         activity.idInElement = web3.utils.padRight(web3.utils.asciiToHex(tempActivity.incoming[0].sourceRef.id), 64);
-    } else {
+    } else if(tempActivity.$parent.$type.includes("bpmn:SubChoreography")){
+        console.log("CASO IN CUI L'attivita non è connessa")
+    }else{
         activity.idInElement = web3.utils.padRight(0, 64);
     }
     if (tempActivity.outgoing) {
         activity.idOutElement = web3.utils.padRight(web3.utils.asciiToHex(tempActivity.outgoing[0].targetRef.id), 64);
-    } else {
+    } else if(tempActivity.$parent.$type.includes("bpmn:SubChoreography")) {
+        activity.idOutElement=web3.utils.padRight(web3.utils.asciiToHex(tempActivity.$parent.outgoing[0].targetRef.id), 64);
+    }else{
         activity.idOutElement = web3.utils.padRight(0, 64);
     }
     if (tempActivity.messageFlowRef[1]) {
@@ -160,7 +164,6 @@ export async function buttonExecutePressedComposition(businessObject) {
     message.idActivity = web3.utils.padRight(web3.utils.asciiToHex(tempActivity.id), 64)
     let attributes;
     if (businessObject.get('messageItems').length > 0) {
-        console.log("sono qui")
         let splitString = businessObject.get('messageItems')[0].name.split("(");
         message.mappingKey = web3.utils.padRight(web3.utils.asciiToHex(splitString[0]), 64);
         let splitCut = splitString[1].substring(0, splitString[1].length - 1).split(",");
@@ -202,25 +205,7 @@ export async function buttonExecutePressedComposition(businessObject) {
                 const controlAsciiResult = web3.utils.asciiToHex(incomingElement.id);
                 controlFlowElement.id = web3.utils.padRight(controlAsciiResult, 64)
                 controlFlowElement.executed = incomingElement.di.fill.includes("lightgreen");
-                if (incomingElement.$type.includes("bpmn:StartEvent")) {
-                    controlFlowElement.tipo = "0"
-                } else if (incomingElement.$type.includes("bpmn:ExclusiveGateway")) {
-                    if (incomingElement.incoming.length == 1 && incomingElement.outgoing.length > 1) {
-                        controlFlowElement.tipo = "1"
-                    } else if (incomingElement.incoming.length > 1 && incomingElement.outgoing.length == 1) {
-                        controlFlowElement.tipo = "2"
-                    }
-                } else if (incomingElement.$type.includes("bpmn:ParallelGateway")) {
-                    if (incomingElement.incoming.length == 1 && incomingElement.outgoing.length > 1) {
-                        controlFlowElement.tipo = "3"
-                    } else if (incomingElement.incoming.length > 1 && incomingElement.outgoing.length == 1) {
-                        controlFlowElement.tipo = "4"
-                    }
-                } else if (incomingElement.$type.includes("bpmn:EventBasedGateway")) {
-                    controlFlowElement.tipo = "5"
-                } else if (incomingElement.$type.includes("bpmn:EndEvent")) {
-                    controlFlowElement.tipo = "6"
-                }
+                
                 if (incomingElement.outgoing) {
                     incomingElement.outgoing.forEach((ref) => {
                         controlFlowElement.outgoingActivity.push(web3.utils.padRight(web3.utils.asciiToHex(ref.targetRef.id), 64))
@@ -230,6 +215,25 @@ export async function buttonExecutePressedComposition(businessObject) {
                     incomingElement.incoming.forEach((ref) => {
                         controlFlowElement.incomingActivity.push(web3.utils.padRight(web3.utils.asciiToHex(ref.sourceRef.id), 64))
                     })
+                }
+                if (incomingElement.$type.includes("bpmn:StartEvent")) {
+                    controlFlowElement.tipo = "0"
+                } else if (incomingElement.$type.includes("bpmn:ExclusiveGateway")) {
+                    if (controlFlowElement.incomingActivity.length == 1 && controlFlowElement.outgoingActivity.length > 1) {
+                        controlFlowElement.tipo = "1"
+                    } else if (controlFlowElement.incomingActivity.length > 1 && controlFlowElement.outgoingActivity.length == 1) {
+                        controlFlowElement.tipo = "2"
+                    }
+                } else if (incomingElement.$type.includes("bpmn:ParallelGateway")) {
+                    if (controlFlowElement.incomingActivity.length == 1 && controlFlowElement.outgoingActivity.length > 1) {
+                        controlFlowElement.tipo = "3"
+                    } else if (controlFlowElement.incomingActivity.length > 1 && controlFlowElement.outgoingActivity.length == 1) {
+                        controlFlowElement.tipo = "4"
+                    }
+                } else if (incomingElement.$type.includes("bpmn:EventBasedGateway")) {
+                    controlFlowElement.tipo = "5"
+                } else if (incomingElement.$type.includes("bpmn:EndEvent")) {
+                    controlFlowElement.tipo = "6"
                 }
                 if (controlFlowElement.tipo.includes("1")) {
                     incomingElement.outgoing.forEach((edge) => {
@@ -257,7 +261,6 @@ export async function buttonExecutePressedComposition(businessObject) {
     }
     if (tempActivity.outgoing) {
         tempActivity.outgoing.forEach((element) => {
-
             let outgoingElement = element.targetRef
             if (outgoingElement.$type.includes("Event") || outgoingElement.$type.includes("Gateway")) {
                 let controlFlowElement = {
@@ -269,36 +272,45 @@ export async function buttonExecutePressedComposition(businessObject) {
                 }
                 const controlAsciiResult = web3.utils.asciiToHex(outgoingElement.id);
                 controlFlowElement.id = web3.utils.padRight(controlAsciiResult, 64)
-                if (outgoingElement.$type.includes("bpmn:StartEvent")) {
-                    controlFlowElement.tipo = "0"
-                } else if (outgoingElement.$type.includes("bpmn:ExclusiveGateway")) {
-                    if (outgoingElement.incoming && outgoingElement.outgoing && outgoingElement.incoming.length == 1 && outgoingElement.outgoing.length > 1) {
-                        controlFlowElement.tipo = "1"
-                    } else if (outgoingElement.incoming && outgoingElement.outgoing && outgoingElement.incoming.length > 1 && outgoingElement.outgoing.length == 1) {
-                        controlFlowElement.tipo = "2"
-                    } else {
-                        controlFlowElement.tipo = "7"
-                    }
-                } else if (outgoingElement.$type.includes("bpmn:ParallelGateway")) {
-                    if (outgoingElement.incoming.length == 1 && outgoingElement.outgoing.length > 1) {
-                        controlFlowElement.tipo = "3"
-                    } else if (outgoingElement.incoming.length > 1 && outgoingElement.outgoing.length == 1) {
-                        controlFlowElement.tipo = "4"
-                    }
-                } else if (outgoingElement.$type.includes("bpmn:EventBasedGateway")) {
-                    controlFlowElement.tipo = "5"
-                } else if (outgoingElement.$type.includes("bpmn:EndEvent")) {
-                    controlFlowElement.tipo = "6"
-                }
                 if (outgoingElement.outgoing) {
                     outgoingElement.outgoing.forEach((ref) => {
                         controlFlowElement.outgoingActivity.push(web3.utils.padRight(web3.utils.asciiToHex(ref.targetRef.id), 64))
                     })
+                }else{
+                    if(outgoingElement.$parent.$type.includes("bpmn:SubChoreography")){
+                        console.log(outgoingElement.$parent)
+                        controlFlowElement.outgoingActivity.push(web3.utils.padRight(web3.utils.asciiToHex(outgoingElement.$parent.outgoing[0].targetRef.id), 64))
+                    }
                 }
                 if (outgoingElement.incoming) {
                     outgoingElement.incoming.forEach((ref) => {
                         controlFlowElement.incomingActivity.push(web3.utils.padRight(web3.utils.asciiToHex(ref.sourceRef.id), 64))
                     })
+                }else{
+                    console.log("CASO DA FIXARE")
+                }
+                if (outgoingElement.$type.includes("bpmn:StartEvent")) {
+                    controlFlowElement.tipo = "0"
+                } else if (outgoingElement.$type.includes("bpmn:ExclusiveGateway")) {
+                    if (controlFlowElement.incomingActivity.length == 1 && controlFlowElement.outgoingActivity.length > 1) {
+                        controlFlowElement.tipo = "1"
+                    } else if (controlFlowElement.incomingActivity.length > 1 && controlFlowElement.outgoingActivity.length == 1) {
+                        controlFlowElement.tipo = "2"
+                    } else {
+                        controlFlowElement.tipo = "7"
+                    }
+                } else if (outgoingElement.$type.includes("bpmn:ParallelGateway")) {
+                    if (controlFlowElement.incomingActivity.length == 1 && controlFlowElement.outgoingActivity.length > 1) {
+                        controlFlowElement.tipo = "3"
+                    } else if (controlFlowElement.incomingActivity.length > 1 && controlFlowElement.outgoingActivity.length == 1) {
+                        controlFlowElement.tipo = "4"
+                    }else {
+                        controlFlowElement.tipo = "7"
+                    }
+                } else if (outgoingElement.$type.includes("bpmn:EventBasedGateway")) {
+                    controlFlowElement.tipo = "5"
+                } else if (outgoingElement.$type.includes("bpmn:EndEvent")) {
+                    controlFlowElement.tipo = "6"
                 }
                 //I can save the control flow element only if it outgoing element because if i save the incoming i can have some problem
                 //with the validation of the variables
@@ -336,8 +348,10 @@ export async function buttonExecutePressedComposition(businessObject) {
             })
         }
     })
-    console.log(activity, message, selectAttributes, values, controlFlowElementList, edgeConditionList,subChoId)
-    await contract.methods.executeCompMessage(activity, message, selectAttributes, values, controlFlowElementList, edgeConditionList,subChoId).send({ from: "0xcCAC66062051Ac9E445A2b59B239938483F88E70" })
+    console.log(activity, message, selectAttributes, values, controlFlowElementList, edgeConditionList)
+    const gasPrice = await web3.eth.getGasPrice();
+    const gasLimit = 3000000;
+    await contract.methods.executeCompMessage(activity, message, selectAttributes, values, controlFlowElementList, edgeConditionList).send({ from: "0x1bf6d93F3CE0dDc961560819aa774dE7Cf54D69D" ,gas:gasLimit,gasPrice:gasPrice})
 
 
 
