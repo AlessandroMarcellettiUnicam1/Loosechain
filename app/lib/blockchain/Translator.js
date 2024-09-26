@@ -305,11 +305,12 @@ export async function translateDiagram(modeler,contract){
     console.log(controlFlowElementList)
     console.log(edgeConditionList)
     // console.log(subChoreographyList)
-
+    console.log(contract)
     //TODO metodo Web3 per leggere l'address direttamente 
     const gasPrice = await web3.eth.getGasPrice();
-    const gasLimit = 3000000;
-    await contract.methods.setInformation(activityList,messagges,participantList,messageAttributesList,controlFlowElementList,edgeConditionList).send({from:"0x1bf6d93F3CE0dDc961560819aa774dE7Cf54D69D",gas:gasLimit,gasPrice: gasPrice})
+    const gasLimit = 6721975;
+    const gasEstimation=await contract.methods.setInformation(activityList,messagges,participantList,messageAttributesList,controlFlowElementList,edgeConditionList).send({from:"0x1bf6d93F3CE0dDc961560819aa774dE7Cf54D69D",gas:gasLimit,gasPrice: gasPrice})
+    console.log(gasEstimation)
 }
 
 

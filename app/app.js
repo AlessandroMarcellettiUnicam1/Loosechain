@@ -53,6 +53,7 @@ function diagramName() {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
+  console.log("carico")
   // initialize the blockchain connection and set up event listeners
   const contract = await connectToBlockchain();
   if (contract) {
