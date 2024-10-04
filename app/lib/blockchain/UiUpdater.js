@@ -32,7 +32,7 @@ async function getCurrentState(contract,modeler) {
 }
 
 function applyStateToUI(state, modeler) {
-  
+  console.log("sono qui")
   state.forEach(element => {
     const elementId = web3.utils.hexToAscii(element.id);
     let strokeColor, fillColor;

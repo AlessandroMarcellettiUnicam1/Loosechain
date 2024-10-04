@@ -4,8 +4,8 @@ const { ethereum } = window;
 const web3 = new Web3(ethereum);
 var domify = require('min-dom').domify;
 
-
 export async function buttonExecutePressedSelection(businessObject) {
+   
     const contract = await connectToBlockchain();
     let selectionStruct = {
         idActivity: "",
@@ -59,6 +59,8 @@ export async function buttonExecutePressedSelection(businessObject) {
 
 export async function buttonExecutePressedComposition(businessObject) {
     const contract = await connectToBlockchain();
+    let nextActivity=[];
+    let newMessage=[];
     let tempActivity;
     console.log(businessObject)
     let flag = true;
@@ -121,8 +123,13 @@ export async function buttonExecutePressedComposition(businessObject) {
     const asciiResult = web3.utils.asciiToHex(tempActivity.id);
     activity.id = web3.utils.padRight(asciiResult, 64)
     activity.name = web3.utils.padRight(asciiResult, 64)
-    activity.initiator = web3.utils.padRight(web3.utils.asciiToHex(tempActivity.participantRef[0].name), 64);
-    activity.target = web3.utils.padRight(web3.utils.asciiToHex(tempActivity.participantRef[1].name), 64);
+    if(tempActivity.$parent.participantItems && tempActivity.$parent.participantItems.length>0){
+        activity.initiator =web3.utils.padRight(0,64);
+        activity.target = web3.utils.padRight(0,64);
+    }else{
+        activity.initiator = web3.utils.padRight(web3.utils.asciiToHex(tempActivity.participantRef[0].name), 64);
+        activity.target = web3.utils.padRight(web3.utils.asciiToHex(tempActivity.participantRef[1].name), 64);
+    }
     if (tempActivity.incoming) {
         activity.idInElement = web3.utils.padRight(web3.utils.asciiToHex(tempActivity.incoming[0].sourceRef.id), 64);
     } else if(tempActivity.$parent.$type.includes("bpmn:SubChoreography")){
@@ -190,6 +197,7 @@ export async function buttonExecutePressedComposition(businessObject) {
     });
     let controlFlowElementList = [];
     let edgeConditionList = [];
+    console.log(tempActivity)
     if (tempActivity.incoming) {
         tempActivity.incoming.forEach((element) => {
             let incomingElement = element.sourceRef
@@ -203,8 +211,12 @@ export async function buttonExecutePressedComposition(businessObject) {
                     executed: false
                 }
                 const controlAsciiResult = web3.utils.asciiToHex(incomingElement.id);
-                controlFlowElement.id = web3.utils.padRight(controlAsciiResult, 64)
-                controlFlowElement.executed = incomingElement.di.fill.includes("lightgreen");
+                controlFlowElement.id = web3.utils.padRight(controlAsciiResult, 64);
+                if(incomingElement.di.fill){
+                    controlFlowElement.executed = incomingElement.di.fill.includes("lightgreen")|| incomingElement.$type.includes("bpmn:StartEvent") ;
+                }else{
+                    controlFlowElement.executed =incomingElement.$type.includes("bpmn:StartEvent") ;
+                }
                 
                 if (incomingElement.outgoing) {
                     incomingElement.outgoing.forEach((ref) => {
@@ -223,12 +235,16 @@ export async function buttonExecutePressedComposition(businessObject) {
                         controlFlowElement.tipo = "1"
                     } else if (controlFlowElement.incomingActivity.length > 1 && controlFlowElement.outgoingActivity.length == 1) {
                         controlFlowElement.tipo = "2"
+                    }else{
+                        controlFlowElement.tipo = "7"
                     }
                 } else if (incomingElement.$type.includes("bpmn:ParallelGateway")) {
                     if (controlFlowElement.incomingActivity.length == 1 && controlFlowElement.outgoingActivity.length > 1) {
                         controlFlowElement.tipo = "3"
                     } else if (controlFlowElement.incomingActivity.length > 1 && controlFlowElement.outgoingActivity.length == 1) {
                         controlFlowElement.tipo = "4"
+                    }else{
+                        controlFlowElement.tipo = "7"
                     }
                 } else if (incomingElement.$type.includes("bpmn:EventBasedGateway")) {
                     controlFlowElement.tipo = "5"
@@ -335,6 +351,28 @@ export async function buttonExecutePressedComposition(businessObject) {
                 }
                 controlFlowElementList.push(controlFlowElement)
             }
+            console.log(outgoingElement)
+            if(!outgoingElement.$parent.$type.includes("bpmn:SubChoreography")){
+                if(outgoingElement.$type.includes("Event")|| outgoingElement.$type.includes("Gateway")){
+                    searchForNextActivities(outgoingElement,controlFlowElementList,nextActivity,newMessage);
+                    // if(outgoingElement.outgoing){
+                    //     outgoingElement.outgoing.forEach((element)=>{
+                    //         if(element.targetRef.$type.includes("bpmn:ChoreographyTask")){
+                    //             console.log(element.targetRef)
+                    //             nextActivity.push(createActivity(element.targetRef));
+                    //             createMessage(element.targetRef,newMessage);
+                    //         }
+                    //     })
+                    // }
+                }else if(outgoingElement.$type.includes("bpmn:ChoreographyTask")){
+                    console.log(outgoingElement)
+                    if(!outgoingElement.di.fill){
+                        nextActivity.push(createActivity(outgoingElement));
+                        createMessage(outgoingElement,newMessage);
+                            // activityList.push(createActivity(element.targetRef));
+                    }
+                }
+            }
         })
     }
 
@@ -351,8 +389,187 @@ export async function buttonExecutePressedComposition(businessObject) {
     console.log(activity, message, selectAttributes, values, controlFlowElementList, edgeConditionList)
     const gasPrice = await web3.eth.getGasPrice();
     const gasLimit = 3000000;
-    await contract.methods.executeCompMessage(activity, message, selectAttributes, values, controlFlowElementList, edgeConditionList).send({ from: "0x1bf6d93F3CE0dDc961560819aa774dE7Cf54D69D" ,gas:gasLimit,gasPrice:gasPrice})
+    console.log(nextActivity,newMessage);
+    await contract.methods.executeCompMessage(activity, message, selectAttributes, values, controlFlowElementList, edgeConditionList,nextActivity,newMessage).send({ from: "0x21796286b6f32f8F3273B2AA7e198d5D132a3870" ,gas:gasLimit,gasPrice:gasPrice})
 
 
 
+}
+function searchForNextActivities(tempActivity,controlFlowElementList,nextActivity,newMessage){
+
+        tempActivity.outgoing.forEach((element)=>{
+
+                if(element.targetRef.$type.includes("bpmn:ChoreographyTask")){
+                    console.log(element)
+                    if(!element.targetRef.di.fill){
+                        nextActivity.push(createActivity(element.targetRef));
+                        createMessage(element.targetRef,newMessage);
+                    }
+                }else if(element.targetRef.$type.includes("Event")|| element.targetRef.$type.includes("Gateway")){
+                    if(!element.targetRef.di.fill){
+                        genereteControlFlow(element.targetRef,controlFlowElementList);
+                        console.log(element.targetRef)
+                        if(!element.targetRef.$type.includes("bpmn:EndEvent")){
+                            searchForNextActivities(element.targetRef,controlFlowElementList,nextActivity,newMessage);
+                        }
+                    }
+                
+               }
+            
+        })
+}
+function genereteControlFlow(element,controlFlowElementList){
+        let controlFlowElement = {
+            id: "",
+            tipo: "",
+            incomingActivity: [],
+            outgoingActivity: [],
+            executed: false
+        }
+        const controlAsciiResult = web3.utils.asciiToHex(element.id);
+        controlFlowElement.id = web3.utils.padRight(controlAsciiResult, 64)
+        if (element.outgoing) {
+            element.outgoing.forEach((ref) => {
+                controlFlowElement.outgoingActivity.push(web3.utils.padRight(web3.utils.asciiToHex(ref.targetRef.id), 64))
+                console.log(ref.targetRef)
+                // if(ref.target.$type.includes("bpmn:ChoreographyTask")){
+                //     nextActivity.push(createActivity(ref.target))
+                // }else if(ref.targetRef.$type.includes("Event")|| ref.targetRef.$type.includes("Gateway")){
+                //     genereteControlFlow(ref.targetRef,controlFlowElement,nextActivity);
+                // }
+            })
+        }else{
+            if(element.$parent.$type.includes("bpmn:SubChoreography")){
+                console.log(element.$parent)
+                controlFlowElement.outgoingActivity.push(web3.utils.padRight(web3.utils.asciiToHex(element.$parent.outgoing[0].targetRef.id), 64))
+            }
+        }
+        if (element.incoming) {
+            element.incoming.forEach((ref) => {
+                controlFlowElement.incomingActivity.push(web3.utils.padRight(web3.utils.asciiToHex(ref.sourceRef.id), 64))
+            })
+        }else{
+            console.log("CASO DA FIXARE")
+        }
+        if (element.$type.includes("bpmn:StartEvent")) {
+            controlFlowElement.tipo = "0"
+        } else if (element.$type.includes("bpmn:ExclusiveGateway")) {
+            if (controlFlowElement.incomingActivity.length == 1 && controlFlowElement.outgoingActivity.length > 1) {
+                controlFlowElement.tipo = "1"
+            } else if (controlFlowElement.incomingActivity.length > 1 && controlFlowElement.outgoingActivity.length == 1) {
+                controlFlowElement.tipo = "2"
+            } else {
+                controlFlowElement.tipo = "7"
+            }
+        } else if (element.$type.includes("bpmn:ParallelGateway")) {
+            if (controlFlowElement.incomingActivity.length == 1 && controlFlowElement.outgoingActivity.length > 1) {
+                controlFlowElement.tipo = "3"
+            } else if (controlFlowElement.incomingActivity.length > 1 && controlFlowElement.outgoingActivity.length == 1) {
+                controlFlowElement.tipo = "4"
+            }else {
+                controlFlowElement.tipo = "7"
+            }
+        } else if (element.$type.includes("bpmn:EventBasedGateway")) {
+            controlFlowElement.tipo = "5"
+        } else if (element.$type.includes("bpmn:EndEvent")) {
+            controlFlowElement.tipo = "6"
+        }
+        //I can save the control flow element only if it outgoing element because if i save the incoming i can have some problem
+        //with the validation of the variables
+        if (controlFlowElement.tipo.includes("1")) {
+            element.outgoing.forEach((edge) => {
+                let edgeCondition = {
+                    attribute: "",
+                    comparisonValue: "",
+                    condition: "",
+                    idActivity: ""
+                }
+                let condtionType = ["GREATER", "LESS", "EQUAL", "GREATEREQUAL", "LESSEQUAL"]
+                let stringcondition = edge.name.split(" ");
+                edgeCondition.attribute = web3.utils.padRight(web3.utils.asciiToHex(stringcondition[0]), 64);
+                edgeCondition.comparisonValue = web3.utils.padRight(web3.utils.asciiToHex(stringcondition[2]), 64);
+                edgeCondition.condition = condtionType.indexOf(stringcondition[1].toUpperCase())
+                if (edge.targetRef.$type) {
+                    edgeCondition.idActivity = web3.utils.padRight(web3.utils.asciiToHex(edge.targetRef.id), 64);
+                }
+                // edgeConditionList.push(edgeCondition)
+            })
+        }
+        controlFlowElementList.push(controlFlowElement);
+}
+
+function createActivity(tempActivity){
+    console.log(tempActivity)
+    let activity = {
+        id: "",
+        name: "",
+        initiator: "",
+        target: "",
+        idInElement: "",
+        idOutElement: "",
+        messageIn: "",
+        executed: false,
+        messageOut: "",
+        tempState: false
+    }
+
+    const asciiResult = web3.utils.asciiToHex(tempActivity.id);
+    activity.id = web3.utils.padRight(asciiResult, 64)
+    activity.name = web3.utils.padRight(asciiResult, 64)
+    if(tempActivity.participantRef[0].name){
+        activity.initiator = web3.utils.padRight(web3.utils.asciiToHex(tempActivity.participantRef[0].name), 64);
+    }else{
+        activity.initiator = web3.utils.padRight(0,64);
+    }
+    if(tempActivity.participantRef[1].name){
+        activity.target = web3.utils.padRight(web3.utils.asciiToHex(tempActivity.participantRef[1].name), 64);
+    }else{
+        activity.target = web3.utils.padRight(0,64);
+    }
+    if (tempActivity.incoming) {
+        activity.idInElement = web3.utils.padRight(web3.utils.asciiToHex(tempActivity.incoming[0].sourceRef.id), 64);
+    } else if(tempActivity.$parent.$type.includes("bpmn:SubChoreography")){
+        console.log("CASO IN CUI L'attivita non è connessa")
+    }else{
+        activity.idInElement = web3.utils.padRight(0, 64);
+    }
+    if (tempActivity.outgoing && tempActivity.outgoing>0) {
+        activity.idOutElement = web3.utils.padRight(web3.utils.asciiToHex(tempActivity.outgoing[0].targetRef.id), 64);
+    } else if(tempActivity.$parent.$type.includes("bpmn:SubChoreography")) {
+        activity.idOutElement=web3.utils.padRight(web3.utils.asciiToHex(tempActivity.$parent.outgoing[0].targetRef.id), 64);
+    }else{
+        activity.idOutElement = web3.utils.padRight(0, 64);
+    }
+    if (tempActivity.messageFlowRef[1]) {
+        activity.messageIn = web3.utils.padRight(web3.utils.asciiToHex(tempActivity.messageFlowRef[1].messageRef.id), 64);
+        activity.messageOut = web3.utils.padRight(web3.utils.asciiToHex(tempActivity.messageFlowRef[0].messageRef.id), 64);
+    } else {
+        activity.messageIn = web3.utils.padRight(web3.utils.asciiToHex(tempActivity.messageFlowRef[0].messageRef.id), 64);
+        activity.messageOut = web3.utils.padRight(0, 64);
+    }
+    
+    return activity
+}
+function createMessage(tempActivity,newMessage){
+    tempActivity.messageFlowRef.forEach((msg)=>{
+        let message = {
+            id: "",
+            name: "",
+            mappingKey: "",
+            selectedAttr: [],
+            sourceParticipant: "",
+            targetParticipant: "",
+            idActivity: "",
+            executed: false,
+            tempState: false
+        }
+        const messageAsciiResult = web3.utils.asciiToHex(msg.messageRef.id);
+        message.id = web3.utils.padRight(messageAsciiResult, 64)
+        message.name = web3.utils.padRight(messageAsciiResult, 64)
+        message.mappingKey=web3.utils.padRight(0,64);
+        message.sourceParticipant = "0x0000000000000000000000000000000000000000";
+        message.targetParticipant = "0x0000000000000000000000000000000000000000";
+        message.idActivity = web3.utils.padRight(web3.utils.asciiToHex(tempActivity.id), 64);
+        newMessage.push(message);
+    })
 }

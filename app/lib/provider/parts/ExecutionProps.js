@@ -20,7 +20,7 @@ var domify = require('min-dom').domify;
  */
 export default function addExecutionProps(group, element, bpmnFactory, translate) {
   const businessObject = getBusinessObject(element);
-
+  console.log(businessObject)
   if (is(element, 'bpmn:Message')) {
     addMessageProps(group, businessObject, translate);
   }
@@ -104,6 +104,16 @@ function addParticipantProps(group, businessObject, translate) {
     label: translate('Select Participant'),
     selectOptions: () => getParticipantItems(businessObject),
     modelProperty: 'participantType'
+    // set: function (element, values) {
+    //   if(businessObject.participantItems.length<1){
+    //     let props = {};
+
+    //   props['name'] = values['participantType'].substring(0,5) || undefined;
+    //   props['participantType']=values['participantType'] || undefined;
+    //   return cmdHelper.updateProperties(element, props)
+    //   }
+    //   return cmdHelper.updateProperties(element,values)
+    // }
   }));
 }
 
@@ -143,10 +153,22 @@ function addAttributeProps(group, businessObject, translate, item, index) {
 }
 
 function getParticipantItems(businessObject) {
-  let participantItems = businessObject.get('participantItems');
-  participantItems = participantItems.length > 0
-    ? participantItems
-    : businessObject.$parent.get('participantItems');
+  let participantItems;
+  console.log(businessObject)
+  if(businessObject.$parent.participantItems){
+    participantItems = businessObject.get('participantItems');
+    console.log(businessObject.$parent)
+    participantItems = participantItems.length > 0
+      ? participantItems
+      : businessObject.$parent.get('participantItems');
+  }else{
+    participantItems = businessObject.$parent.businessObject.get('participantItems');
+    console.log(businessObject)
+    console.log(businessObject.$parent)
+    participantItems = participantItems.length > 0
+      ? participantItems
+      : businessObject.$parent.get('participantItems');
+  }
 
   return [{ name: '', value: '' }, ...participantItems.map(item => ({ name: item.name, value: item.name }))];
 }

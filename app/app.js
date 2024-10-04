@@ -5,7 +5,7 @@ import PropertiesProviderModule from './lib/provider';
 
 import looseValuesModdleDescriptor from './lib/descriptors/loose-values.json';
 
-import xml from './diagrams/SelectionCase.bpmn';
+import xml from './diagrams/SelectionDemo.bpmn';
 import blankXml from './diagrams/newDiagram.bpmn';
 
 import connectToBlockchain from './lib/blockchain/connection';
@@ -53,10 +53,10 @@ function diagramName() {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-  console.log("carico")
   // initialize the blockchain connection and set up event listeners
   const contract = await connectToBlockchain();
   if (contract) {
+    console.log("carico")
     setupEventListeners(contract, modeler);
     await updateUI(contract, modeler);
   }

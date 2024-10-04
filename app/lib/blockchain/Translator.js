@@ -309,12 +309,12 @@ export async function translateDiagram(modeler,contract){
     //TODO metodo Web3 per leggere l'address direttamente 
     const gasPrice = await web3.eth.getGasPrice();
     const gasLimit = 6721975;
-    const gasEstimation=await contract.methods.setInformation(activityList,messagges,participantList,messageAttributesList,controlFlowElementList,edgeConditionList).send({from:"0x1bf6d93F3CE0dDc961560819aa774dE7Cf54D69D",gas:gasLimit,gasPrice: gasPrice})
+    const gasEstimation=await contract.methods.setInformation(activityList,messagges,participantList,messageAttributesList,controlFlowElementList,edgeConditionList).send({from:"0x21796286b6f32f8F3273B2AA7e198d5D132a3870",gas:gasLimit,gasPrice: gasPrice})
     console.log(gasEstimation)
 }
 
 
-function createActivity(diagramElement,activityList,addressKeyMappingList,participantList){
+function createActivity(diagramElement,activityList,addressKeyMappingList,participantList,keyMappingParticipants){
   let activity={
     id:"",
     name:"",
@@ -331,8 +331,16 @@ function createActivity(diagramElement,activityList,addressKeyMappingList,partic
   const asciiResult=web3.utils.asciiToHex(diagramElement.element.id);
   activity.id=web3.utils.padRight(asciiResult,64)
   activity.name=web3.utils.padRight(asciiResult,64)
-  activity.initiator=web3.utils.padRight(web3.utils.asciiToHex(diagramElement.element.businessObject.participantRef[0].name),64);
-  activity.target=web3.utils.padRight(web3.utils.asciiToHex(diagramElement.element.businessObject.participantRef[1].name),64);
+  if(diagramElement.element.businessObject.participantRef[0].name){
+    activity.initiator=web3.utils.padRight(web3.utils.asciiToHex(diagramElement.element.businessObject.participantRef[0].name),64);
+  }else{
+    activity.initiator=web3.utils.padRight(0,64);
+  }
+  if(diagramElement.element.businessObject.participantRef[1].name){
+    activity.target=web3.utils.padRight(web3.utils.asciiToHex(diagramElement.element.businessObject.participantRef[1].name),64);
+  }else{
+    activity.target=web3.utils.padRight(0,64);
+  }
   if(diagramElement.element.businessObject.incoming && diagramElement.element.businessObject.incoming.length>0){
     activity.idInElement=web3.utils.padRight(web3.utils.asciiToHex(diagramElement.element.businessObject.incoming[0].sourceRef.id),64);
   }else if(diagramElement.element.businessObject.$parent.$type.includes("bpmn:SubChoreography")){
@@ -341,7 +349,7 @@ function createActivity(diagramElement,activityList,addressKeyMappingList,partic
     activity.idInElement=web3.utils.padRight(0,64);
   }
 
-  if(diagramElement.element.businessObject.outgoing){
+  if(diagramElement.element.businessObject.outgoing && diagramElement.element.businessObject.outgoing.length>0){
     activity.idOutElement=web3.utils.padRight(web3.utils.asciiToHex(diagramElement.element.businessObject.outgoing[0].targetRef.id),64);
   }else{
     // 
@@ -359,7 +367,8 @@ function createActivity(diagramElement,activityList,addressKeyMappingList,partic
     activity.messageOut=web3.utils.padRight(0,64);
   }
   activityList.push(activity);
-  if(diagramElement.element.businessObject.participantRef[0].participantItems){
+  console.log(diagramElement.element.businessObject.participantRef[0].participantItems)
+  if(diagramElement.element.businessObject.participantRef[0].participantItems && diagramElement.element.businessObject.participantRef[0].participantItems.length>0){
     // console.log(diagramElement.element.businessObject)
 
     if (!addressKeyMappingList.includes(activity.initiator)){
@@ -383,17 +392,10 @@ function createActivity(diagramElement,activityList,addressKeyMappingList,partic
     diagramElement.element.businessObject.$parent.participantItems.forEach(e=>{
       participantAddress.push(e.name)
     })
-    diagramElement.element.businessObject.$parent.participants.forEach(e=>{
-      if(!keyMappingParticipants.includes(e.name)){
-        keyMappingParticipants.push(e.name);
         participantList.push({
           addr:participantAddress,
-          keyMapping:web3.utils.padRight(web3.utils.asciiToHex(e.name),64)
-        })
-      }
+          keyMapping:web3.utils.padRight(0,64)
     })
-
-
   }
 }
 
