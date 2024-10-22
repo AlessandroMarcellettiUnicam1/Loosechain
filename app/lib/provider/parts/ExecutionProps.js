@@ -2,7 +2,8 @@ import { is, getBusinessObject } from 'bpmn-js/lib/util/ModelUtil';
 import entryFactory from 'bpmn-js-properties-panel/lib/factory/EntryFactory';
 import connectToBlockchain from '../../blockchain/connection';
 import cmdHelper from 'bpmn-js-properties-panel/lib/helper/CmdHelper';
-import {buttonExecutePressedSelection, buttonExecutePressedComposition} from './ExecutionButtons'
+import {buttonExecutePressedSelection, buttonExecutePressedComposition, uploadDiff} from './ExecutionButtons'
+import  { modeler } from '../../../app';
 import Web3 from 'web3';
 const { ethereum } = window;
 const web3 = new Web3(ethereum);
@@ -20,7 +21,6 @@ var domify = require('min-dom').domify;
  */
 export default function addExecutionProps(group, element, bpmnFactory, translate) {
   const businessObject = getBusinessObject(element);
-  console.log(businessObject)
   if (is(element, 'bpmn:Message')) {
     addMessageProps(group, businessObject, translate);
   }
@@ -74,11 +74,12 @@ function addMessageProps(group, businessObject, translate) {
   }));
   group.entries.push(
     {
-      id: "tortellini",
+      id: "uploadDiagram",
       html: connectParticipants(),
-      modelProperty: "tortellini",
-      execute: function () {
+      modelProperty: "uploadDiagram",
+      execute: async function () {
         buttonExecutePressedComposition(businessObject)
+         // buttonExecutePressedComposition(businessObject);
       }
     }
   );
@@ -131,21 +132,21 @@ function hasMessageItems(businessObject) {
 function getParentChoreographyElement(businessObject) {
   return businessObject.$parent.get('rootElements').find(e => e.$type === 'bpmn:Choreography');
 }
-//TODO how to gate the value of the checkbox from the composition case 
+// TODO how to gate the value of the checkbox from the composition case 
 function addAttributeProps(group, businessObject, translate, item, index) {
   const modelProperty = item.name;
   group.entries.push(entryFactory.checkbox(translate, {
     id: 'attribute' + index,
     label: item.name,
     modelProperty: modelProperty,
-    //line that hide the checkbox in the case of attribute selected during the selection
+    // line that hide the checkbox in the case of attribute selected during the selection
     hidden: () => hasMessageItems(businessObject),
     get: () => {
       // Logic for getting the attribute value and deselecting the checkbox if the BPMN element has message items
       const res = {};
       res[modelProperty] = hasMessageItems(businessObject)
         ? delete businessObject.$attrs[modelProperty]
-        : businessObject.get(modelProperty)
+        : businessObject.get(modelProperty);
       return res;
     }
   }));
@@ -154,20 +155,17 @@ function addAttributeProps(group, businessObject, translate, item, index) {
 
 function getParticipantItems(businessObject) {
   let participantItems;
-  console.log(businessObject)
-  if(businessObject.$parent.participantItems){
+  if (businessObject.$parent.participantItems) {
     participantItems = businessObject.get('participantItems');
-    console.log(businessObject.$parent)
     participantItems = participantItems.length > 0
       ? participantItems
       : businessObject.$parent.get('participantItems');
-  }else{
+  } else {
     participantItems = businessObject.$parent.businessObject.get('participantItems');
-    console.log(businessObject)
-    console.log(businessObject.$parent)
     participantItems = participantItems.length > 0
       ? participantItems
-      : businessObject.$parent.get('participantItems');
+      // businessObject.$parent.get('participantItems')
+      : businessObject.get('participantItems');
   }
 
   return [{ name: '', value: '' }, ...participantItems.map(item => ({ name: item.name, value: item.name }))];

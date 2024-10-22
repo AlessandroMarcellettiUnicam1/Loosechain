@@ -4,6 +4,8 @@ import inherits from 'inherits';
 import selectionProps from './parts/SelectionProps';
 import compositionProps from './parts/CompositionProps';
 import executionProps from './parts/ExecutionProps';
+import entryFactory from 'bpmn-js-properties-panel/lib/factory/EntryFactory';
+
 
 /**
  * Custom properties provider for Looseness properties. This provider adds a new tab to the base properties panel of
@@ -19,7 +21,6 @@ export default function LoosenessPropertiesProvider(injector, bpmnFactory, trans
   const superGetTabs = this.getTabs;
   this.getTabs = function(element) {
     const tabs = superGetTabs.call(this, element);
-
     tabs.push({
       id: 'modeling',
       label: 'Modeling',
@@ -31,10 +32,11 @@ export default function LoosenessPropertiesProvider(injector, bpmnFactory, trans
       label: 'Execution',
       groups: createExecutionGroups(element, bpmnFactory, translate)
     });
-
+    
     return tabs;
   };
 }
+
 
 /**
  * Creates the groups for the modeling tab.
@@ -78,6 +80,7 @@ function createExecutionGroups(element, bpmnFactory, translate) {
 
   return [executionGroup];
 }
+
 
 inherits(LoosenessPropertiesProvider, BpmnPropertiesProvider);
 LoosenessPropertiesProvider.$inject = ['injector', 'bpmnFactory', 'translate'];
