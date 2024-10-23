@@ -172,7 +172,7 @@ export async function buttonExecutePressedComposition(businessObject) {
     );
     let attributes;
     if (businessObject.get('messageItems').length > 0) {
-        console.log(businessObject)
+        console.log(businessObject);
         let splitString = businessObject.name.split('(');
         message.mappingKey = web3.utils.padRight(
             web3.utils.asciiToHex(splitString[0]),
@@ -222,9 +222,14 @@ export async function buttonExecutePressedComposition(businessObject) {
     diff.messages=diff.messages.filter((e=>e.id!=message.id));
     const gasPrice = await web3.eth.getGasPrice();
     const gasLimit = 3000000;
+
+    if(tempActivity.outgoing && tempActivity.outgoing.length>0 && (tempActivity.outgoing[0].targetRef.$type.includes('Event') || tempActivity.outgoing[0].targetRef.$type.includes('Gateway'))) {
+        genereteControlFlow(tempActivity.outgoing[0].targetRef,controlFlowElementList);
+    }
     console.log(
         activity,
         message,
+        controlFlowElementList,
         selectAttributes,
         values,
         diff.activityList,
@@ -238,6 +243,7 @@ export async function buttonExecutePressedComposition(businessObject) {
       .executeCompMessage(
             activity,
             message,
+            controlFlowElementList,
             selectAttributes,
             values,
             diff.activityList,
@@ -247,7 +253,7 @@ export async function buttonExecutePressedComposition(businessObject) {
             '0x3100000000000000000000000000000000000000000000000000000000000000',
         )
         .send({
-            from: '0x3c30799d99D0C552d1Ec2bE8b1322E4Edd6615e6',
+            from: '0x24cde0a1D5E6c12A9F2d4424b06d9185c6fAC6e9',
             gas: gasLimit,
             gasPrice: gasPrice,
         });
@@ -328,43 +334,43 @@ function genereteControlFlow(element, controlFlowElementList) {
         console.log('CASO DA FIXARE');
     }
     if (element.$type.includes('bpmn:StartEvent')) {
-        controlFlowElement.tipo = '0';
+        controlFlowElement.tipo = '1';
     } else if (element.$type.includes('bpmn:ExclusiveGateway')) {
         if (
             controlFlowElement.incomingActivity.length == 1 &&
             controlFlowElement.outgoingActivity.length > 1
         ) {
-            controlFlowElement.tipo = '1';
+            controlFlowElement.tipo = '2';
         } else if (
             controlFlowElement.incomingActivity.length > 1 &&
             controlFlowElement.outgoingActivity.length == 1
         ) {
-            controlFlowElement.tipo = '2';
+            controlFlowElement.tipo = '3';
         } else {
-            controlFlowElement.tipo = '7';
+            controlFlowElement.tipo = '8';
         }
     } else if (element.$type.includes('bpmn:ParallelGateway')) {
         if (
             controlFlowElement.incomingActivity.length == 1 &&
             controlFlowElement.outgoingActivity.length > 1
         ) {
-            controlFlowElement.tipo = '3';
+            controlFlowElement.tipo = '4';
         } else if (
             controlFlowElement.incomingActivity.length > 1 &&
             controlFlowElement.outgoingActivity.length == 1
         ) {
-            controlFlowElement.tipo = '4';
+            controlFlowElement.tipo = '5';
         } else {
-            controlFlowElement.tipo = '7';
+            controlFlowElement.tipo = '8';
         }
     } else if (element.$type.includes('bpmn:EventBasedGateway')) {
-        controlFlowElement.tipo = '5';
-    } else if (element.$type.includes('bpmn:EndEvent')) {
         controlFlowElement.tipo = '6';
+    } else if (element.$type.includes('bpmn:EndEvent')) {
+        controlFlowElement.tipo = '7';
     }
     // I can save the control flow element only if it outgoing element because if i save the incoming i can have some problem
     // with the validation of the variables
-    if (controlFlowElement.tipo.includes('1')) {
+    if (controlFlowElement.tipo.includes('2')) {
         element.outgoing.forEach((edge) => {
             let edgeCondition = {
                 attribute: '',
@@ -663,27 +669,27 @@ function createActivity(diagramElement, activityList, addressKeyMappingList, par
         controlFlowElement.incomingActivity.push(web3.utils.padRight(web3.utils.asciiToHex(diagramElement.element.businessObject.$parent.incoming[0].sourceRef.id), 64));
     }
     if (diagramElement.element.type.includes('bpmn:StartEvent')) {
-      controlFlowElement.tipo = '0';
+      controlFlowElement.tipo = '1';
     } else if (diagramElement.element.type.includes('bpmn:ExclusiveGateway')) {
       if (controlFlowElement.incomingActivity.length == 1 && controlFlowElement.outgoingActivity.length > 1) {
-        controlFlowElement.tipo = '1';
-      } else if (controlFlowElement.incomingActivity.length > 1 && controlFlowElement.outgoingActivity.length == 1) {
         controlFlowElement.tipo = '2';
+      } else if (controlFlowElement.incomingActivity.length > 1 && controlFlowElement.outgoingActivity.length == 1) {
+        controlFlowElement.tipo = '3';
       } else {
-        controlFlowElement.tipo = '7';
+        controlFlowElement.tipo = '8';
       }
     } else if (diagramElement.element.type.includes('bpmn:ParallelGateway')) {
       if (controlFlowElement.incomingActivity.length == 1 && controlFlowElement.outgoingActivity.length > 1) {
-        controlFlowElement.tipo = '3';
-      } else if (controlFlowElement.incomingActivity.length > 1 && controlFlowElement.outgoingActivity.length == 1) {
         controlFlowElement.tipo = '4';
+      } else if (controlFlowElement.incomingActivity.length > 1 && controlFlowElement.outgoingActivity.length == 1) {
+        controlFlowElement.tipo = '5';
       } else {
-        controlFlowElement.tipo = '7';
+        controlFlowElement.tipo = '8';
       }
     } else if (diagramElement.element.type.includes('bpmn:EventBasedGateway')) {
-      controlFlowElement.tipo = '5';
-    } else if (diagramElement.element.type.includes('bpmn:EndEvent')) {
       controlFlowElement.tipo = '6';
+    } else if (diagramElement.element.type.includes('bpmn:EndEvent')) {
+      controlFlowElement.tipo = '7';
     }
 
     controlFlowElementList.push(controlFlowElement);

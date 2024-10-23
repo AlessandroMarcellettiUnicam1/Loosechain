@@ -46,7 +46,7 @@ export async function translateDiagram(modeler, contract) {
   //TODO metodo Web3 per leggere l'address direttamente 
   const gasPrice = await web3.eth.getGasPrice();
   const gasLimit = 6721975;
-  const gasEstimation = await contract.methods.setInformation(activityList, messagges, participantList, messageAttributesList, controlFlowElementList, edgeConditionList,"0x3100000000000000000000000000000000000000000000000000000000000000","0x3100000000000000000000000000000000000000000000000000000000000000").send({ from: "0x3c30799d99D0C552d1Ec2bE8b1322E4Edd6615e6", gas: gasLimit, gasPrice: gasPrice })
+  const gasEstimation = await contract.methods.setInformation(activityList, messagges, participantList, messageAttributesList, controlFlowElementList, edgeConditionList,"0x3100000000000000000000000000000000000000000000000000000000000000","0x3100000000000000000000000000000000000000000000000000000000000000").send({ from: "0x24cde0a1D5E6c12A9F2d4424b06d9185c6fAC6e9", gas: gasLimit, gasPrice: gasPrice })
   console.log(gasEstimation);
 }
 async function  storeInLocalStorage(modeler){
@@ -238,27 +238,27 @@ function createGatewayElement(diagramElement, controlFlowElementList) {
     control.flowElements.incomingActivity.push(web3.utils.padRight(web3.utils.asciiToHex(diagramElement.element.businessObject.$parent.incoming[0].sourceRef.id), 64));
   }
   if (diagramElement.element.type.includes("bpmn:StartEvent")) {
-    controlFlowElement.tipo = "0"
+    controlFlowElement.tipo = "1"
   } else if (diagramElement.element.type.includes("bpmn:ExclusiveGateway")) {
     if (controlFlowElement.incomingActivity.length == 1 && controlFlowElement.outgoingActivity.length > 1) {
-      controlFlowElement.tipo = "1"
-    } else if (controlFlowElement.incomingActivity.length > 1 && controlFlowElement.outgoingActivity.length == 1) {
       controlFlowElement.tipo = "2"
+    } else if (controlFlowElement.incomingActivity.length > 1 && controlFlowElement.outgoingActivity.length == 1) {
+      controlFlowElement.tipo = "3"
     } else {
-      controlFlowElement.tipo = "7"
+      controlFlowElement.tipo = "8"
     }
   } else if (diagramElement.element.type.includes("bpmn:ParallelGateway")) {
     if (controlFlowElement.incomingActivity.length == 1 && controlFlowElement.outgoingActivity.length > 1) {
-      controlFlowElement.tipo = "3"
-    } else if (controlFlowElement.incomingActivity.length > 1 && controlFlowElement.outgoingActivity.length == 1) {
       controlFlowElement.tipo = "4"
+    } else if (controlFlowElement.incomingActivity.length > 1 && controlFlowElement.outgoingActivity.length == 1) {
+      controlFlowElement.tipo = "5"
     } else {
-      controlFlowElement.tipo = "7"
+      controlFlowElement.tipo = "8"
     }
   } else if (diagramElement.element.type.includes("bpmn:EventBasedGateway")) {
-    controlFlowElement.tipo = "5"
-  } else if (diagramElement.element.type.includes("bpmn:EndEvent")) {
     controlFlowElement.tipo = "6"
+  } else if (diagramElement.element.type.includes("bpmn:EndEvent")) {
+    controlFlowElement.tipo = "7"
   }
   controlFlowElementList.push(controlFlowElement);
 }
