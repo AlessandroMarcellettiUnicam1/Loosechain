@@ -1,7 +1,7 @@
 import entryFactory from 'bpmn-js-properties-panel/lib/factory/EntryFactory';
 import { getBusinessObject } from 'bpmn-js/lib/util/ModelUtil';
 import cmdHelper from 'bpmn-js-properties-panel/lib/helper/CmdHelper';
-
+import { modeler } from '../../../../app';
 /**
  * Creates a custom table entry in the BPMN properties panel.
  *
@@ -60,6 +60,18 @@ function removeBusinessObjectElement(element, businessObject, idx, businessObjec
 
 function updateBusinessObjectElement(element, businessObject, values, idx, businessObjectProperty) {
   const itemToUpdate = businessObject.get(businessObjectProperty)[idx];
+  console.log('updateElement element:', element);
+  console.log('updateElement values:', values);
+  console.log('updateElement idx:', idx);
+  if (businessObjectProperty.includes("participantItems")) {
+    const commandStack = modeler.get('commandStack');
+    const participantProps = {
+      id: 'newParticipant',
+      name: values.name,
+      type: 'participant'
+    };
+    commandStack.execute('participant.create', participantProps);
+  }
   return cmdHelper.updateBusinessObject(element, itemToUpdate, values);
 }
 /**

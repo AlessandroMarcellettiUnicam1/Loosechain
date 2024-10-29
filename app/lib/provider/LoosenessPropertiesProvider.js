@@ -7,6 +7,7 @@ import entryFactory from 'bpmn-js-properties-panel/lib/factory/EntryFactory';
 import { addCustomLabel } from './parts/helper/TableDefinitionHelper';
 import cmdHelper from 'bpmn-js-properties-panel/lib/helper/CmdHelper';
 
+
 /**
  * Custom properties provider for Looseness properties. This provider adds a new tab to the base properties panel of
  * bpmn-js. This tab contains the following groups: Selection Degree, Composition Degree, and Execution.

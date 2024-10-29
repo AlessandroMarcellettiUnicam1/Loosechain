@@ -40,9 +40,9 @@ export const modeler = new ChorJSModeler({
 
 // display the given model (XML representation)
 async function renderModel(newXml) {
-  if(window.localStorage.getItem("xml")){
-    await modeler.importXML(window.localStorage.getItem("xml"));
-  }else{
+  if (window.localStorage.getItem('xml')) {
+    await modeler.importXML(window.localStorage.getItem('xml'));
+  } else {
     await modeler.importXML(newXml);
   }
   isDirty = false;
@@ -115,7 +115,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   document.getElementById('js-save-progress').addEventListener('click',async () =>{
     const result = await modeler.saveXML({ format: true });
-    window.localStorage.setItem("xml",result.xml);
+    window.localStorage.setItem('xml',result.xml);
+    location.reload();
+  });
+
+  document.getElementById('js-set-cookie').addEventListener('click', function() {
+    document.cookie = 'selectedOption=true; path=/; max-age=3600'; // Cookie expires in 1 hour
+    this.style.display = 'none'; // Hide the button
     location.reload();
   });
 
@@ -191,8 +197,46 @@ document.addEventListener('DOMContentLoaded', async () => {
       reporter.validateDiagram();
     }
   });
+  if (document.cookie.split(';').some((item) => item.trim().startsWith('selectedOption='))) {
+    document.getElementById('js-set-cookie').style.display = 'none';
+    modeler.on('commandStack.connection.create.postExecuted', function(event) {
+      const edgeAdded = event.context;
+      const elementTarget = edgeAdded.target;
+      if (elementTarget.businessObject.di.fill && elementTarget.businessObject.di.fill.includes('lightgreen')) {
+        modeler.get('commandStack').undo();
+      }
+    });
+  }
+});
+document.getElementById('js-create-participant').addEventListener('click', async () => {
+  // const commandStack = modeler.get('commandStack');
+
+  // // Definisci le proprietà del nuovo partecipante
+  // const participantProps = {
+  //   id: 'newParticipant',
+  //   name: 'Nuovo Partecipante',
+  //   type: 'participant' // Assicurati di specificare il tipo corretto
+  // };
+
+  // // Crea il partecipante
+  // commandStack.execute('participant.create', participantProps);
+  // const command = modeler.get('commandStack').getCommand('participant.create', participantProps);
+  // modeler.get('commandStack').execute(command);
 });
 
+// listener for creating a new participant
+modeler.on('commandStack.participant.create.postExecuted', function(event) {
+  event.context.created.name=event.context.name;
+  console.log(event.context.name);
+});
+
+
+
+window.onload = function() {
+  if (document.cookie.split(';').some((item) => item.trim().startsWith('selectedOption='))) {
+    document.getElementById('js-set-cookie').style.display = 'none';
+  }
+};
 // expose bpmnjs to window for debugging purposes
 window.bpmnjs = modeler;
 
@@ -203,5 +247,4 @@ window.addEventListener('beforeunload', function(e) {
     e.returnValue = '';
   }
 });
-
 renderModel(xml);

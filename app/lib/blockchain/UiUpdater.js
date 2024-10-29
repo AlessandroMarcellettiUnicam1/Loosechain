@@ -17,15 +17,14 @@ async function getCurrentState(contract,modeler) {
   let idInstance;
   for (const e in elements) {
 
-    if (elements[e].element.type.includes("bpmn:Choreography") && !elements[e].element.type.includes("bpmn:ChoreographyTask")){
-      if(!elements[e].element.businessObject.$attrs.instanceId){
+    if (elements[e].element.type.includes('bpmn:Choreography') && !elements[e].element.type.includes('bpmn:ChoreographyTask')) {
+      if (!elements[e].element.businessObject.$attrs.instanceId) {
         idInstance='0x3100000000000000000000000000000000000000000000000000000000000000';
-      }else{
+      } else {
         idInstance=web3.utils.padRight(web3.utils.asciiToHex(elements[e].element.businessObject.$attrs.instanceId), 64);
       }
     }
   }
-  console.log(idInstance);
   let result=[];
   for (const e in elements) {
     const asciiResult=web3.utils.asciiToHex(elements[e].element.id);
@@ -60,7 +59,15 @@ function applyStateToUI(state, modeler) {
     }
     setTaskColor(modeler, elementId, strokeColor, fillColor);
   });
-  // colorAfeterBlockchain(modeler);
+  // let flag=false;
+  // state.forEach(element=>{
+  //   if (element.id!=web3.utils.padRight(0,64)) {
+  //     flag=true;
+  //   }
+  // });
+  // if(!flag){
+  //   colorAfeterBlockchain(modeler);
+  // }
 
 }
 
@@ -68,21 +75,7 @@ function colorAfeterBlockchain(modeler) {
   let elements = modeler.get('elementRegistry')['_elements'];
   for (const e in elements) {
     let ele=elements[e].element;
-    if (ele.type.includes('bpmn:SequenceFlow')) {
-      if (ele.businessObject.sourceRef.di.fill && ele.businessObject.targetRef.di.fill) {
-        if (ele.businessObject.sourceRef.di.fill.includes('lightgreen') && ele.businessObject.targetRef.di.fill.includes('lightgray')) {
-          if (ele.businessObject.targetRef.$type.includes('Task')) {
-            ele.businessObject.targetRef.messageFlowRef.forEach((mes)=>{
-              setTaskColor(modeler,mes.messageRef.id,'black','yellow');
-            });
-            setTaskColor(modeler,ele.businessObject.targetRef.id,'black','yellow');
-          }
-          if (ele.businessObject.targetRef.$type.includes('Event') || ele.businessObject.targetRef.$type.includes('Gateway')) {
-            setTaskColor(modeler,ele.businessObject.targetRef.id,'green','lightgreen');
-          }
-        }
-      }
-    }
+    setTaskColor(modeler,ele.id,'black','white');
   }
 }
 

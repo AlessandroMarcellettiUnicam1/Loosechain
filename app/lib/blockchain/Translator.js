@@ -33,7 +33,6 @@ export async function translateDiagram(modeler, contract) {
     } else if (elements[e].element.type.includes("bpmn:SubChoreography")) {
       console.log("subCho")
     }else if (elements[e].element.type.includes("bpmn:Choreography") && !elements[e].element.type.includes("bpmn:ChoreographyTask")){
-      console.log(elements[e].element)
       if(!elements[e].element.businessObject.$attrs.instanceId){
         idInstance='0x3100000000000000000000000000000000000000000000000000000000000000';
       }else{
@@ -58,7 +57,6 @@ export async function translateDiagram(modeler, contract) {
   const gasPrice = await web3.eth.getGasPrice();
   const gasLimit = 6721975;
   const gasEstimation = await contract.methods.setInformation(activityList, messagges, participantList, messageAttributesList, controlFlowElementList, edgeConditionList,idChoreography,idInstance).send({ from: "0x24cde0a1D5E6c12A9F2d4424b06d9185c6fAC6e9", gas: gasLimit, gasPrice: gasPrice })
-  console.log(gasEstimation);
 }
 
 
