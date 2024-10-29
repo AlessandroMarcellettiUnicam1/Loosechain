@@ -12,23 +12,13 @@
       "extends": [
         "bpmn:Choreography",
         "bpmn:Message",
-        "bpmn:Participant",
+        "bpmn:Participant"
       ],
       "properties": [
         {
           "name": "messageItems",
           "isMany": true,
           "type": "loose:MessageValue"
-        },
-        {
-          "name":"attributeValues",
-          "isMany":true,
-          "type":"loose:MessageAttributeValues"
-        },
-        {
-          "name":"link",
-          "isMany":true,
-          "type":"loose:MessageButton"
         },
         {
           "name": "attributeItems",
@@ -39,7 +29,7 @@
           "name": "participantItems",
           "isMany": true,
           "type": "loose:ParticipantValue"
-        }
+        } 
       ]
     },
     {
@@ -49,16 +39,6 @@
           "name": "name",
           "isAttr": true,
           "type": "String"
-        }
-      ]
-    },
-    {
-      "name":"MessageAttributeValues",
-      "properties":[
-        {
-          "name":"name",
-          "isAttr":true,
-          "type":"String"
         }
       ]
     },
@@ -79,6 +59,16 @@
           "name": "name",
           "isAttr": true,
           "type": "String"
+        }
+      ]
+    },
+    {
+      "name":"ChorInstanceId",
+      "properties":[
+        {
+          "name":"name",
+          "isAttr":true,
+          "type":"String"
         }
       ]
     }

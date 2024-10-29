@@ -14,17 +14,27 @@ export default async function updateUI(contract, modeler) {
 
 async function getCurrentState(contract,modeler) {
   const elements=modeler.get('elementRegistry')['_elements'];
-
-  let result=[];
+  let idInstance;
   for (const e in elements) {
 
+    if (elements[e].element.type.includes("bpmn:Choreography") && !elements[e].element.type.includes("bpmn:ChoreographyTask")){
+      if(!elements[e].element.businessObject.$attrs.instanceId){
+        idInstance='0x3100000000000000000000000000000000000000000000000000000000000000';
+      }else{
+        idInstance=web3.utils.padRight(web3.utils.asciiToHex(elements[e].element.businessObject.$attrs.instanceId), 64);
+      }
+    }
+  }
+  console.log(idInstance);
+  let result=[];
+  for (const e in elements) {
     const asciiResult=web3.utils.asciiToHex(elements[e].element.id);
     if (elements[e].element.type.includes('Task')) {
-      result.push(await contract.methods.attivita('0x3100000000000000000000000000000000000000000000000000000000000000',web3.utils.padRight(asciiResult,64),1).call());
+      result.push(await contract.methods.attivita(idInstance,web3.utils.padRight(asciiResult,64),1).call());
     } else if (elements[e].element.type.includes('Message')) {
-      result.push(await contract.methods.messaggi('0x3100000000000000000000000000000000000000000000000000000000000000',web3.utils.padRight(asciiResult,64),1).call());
+      result.push(await contract.methods.messaggi(idInstance,web3.utils.padRight(asciiResult,64),1).call());
     } else if (elements[e].element.type.includes('Event') ||elements[e].element.type.includes('Gateway')) {
-      result.push(await contract.methods.controlFlowElementList('0x3100000000000000000000000000000000000000000000000000000000000000',web3.utils.padRight(asciiResult,64)).call());
+      result.push(await contract.methods.controlFlowElementList(idInstance,web3.utils.padRight(asciiResult,64)).call());
     }
   }
 

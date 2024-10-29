@@ -17,7 +17,7 @@ import cmdHelper from 'bpmn-js-properties-panel/lib/helper/CmdHelper';
  * @param {string} options.type - The type of the new BPMN element to be created.
  * @returns {Object} The custom property table entry.
  */
-export default function createCustomTableEntry(element, bpmnFactory, translate, options) {
+export function createCustomTableEntry(element, bpmnFactory, translate, options) {
   const {
     businessObjectProperty,
     id,
@@ -61,4 +61,42 @@ function removeBusinessObjectElement(element, businessObject, idx, businessObjec
 function updateBusinessObjectElement(element, businessObject, values, idx, businessObjectProperty) {
   const itemToUpdate = businessObject.get(businessObjectProperty)[idx];
   return cmdHelper.updateBusinessObject(element, itemToUpdate, values);
+}
+/**
+ * Creates a custom label entry in the BPMN properties panel.
+ *
+ * @param {djs.model.Base|ModdleElement} element - The BPMN element.
+ * @param {Object} bpmnFactory - Factory to create new BPMN elements.
+ * @param {Function} translate - Function to translate labels and descriptions.
+ * @param {Object} options - Configuration options.
+ * @param {string} options.businessObjectProperty - The property of the business object to be modified.
+ * @param {string} options.id - The ID of the entry.
+ * @param {string} options.description - The description of the entry.
+ * @param {string} options.label - The label of the entry.
+ * @returns {Object} The custom label entry.
+ */
+export function createCustomLabel(element, bpmnFactory, translate, options) {
+  const {
+    businessObjectProperty,
+    id,
+    description,
+    label
+  } = options;
+  const businessObject = getBusinessObject(element);
+  return entryFactory.textField(translate, {
+    id,
+    description: translate(description),
+    label: translate(label),
+    modelProperty: businessObjectProperty,
+    get: (element) => {
+      const bo = getBusinessObject(element);
+      return { [businessObjectProperty]: bo.get(businessObjectProperty) };
+    },
+    set: (element, values) => {
+      const bo = getBusinessObject(element);
+      const properties = {};
+      properties[businessObjectProperty] = values[businessObjectProperty];
+      return cmdHelper.updateBusinessObject(element, bo, properties);
+    }
+  });
 }

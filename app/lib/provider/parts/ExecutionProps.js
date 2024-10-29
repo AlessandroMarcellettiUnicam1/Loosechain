@@ -2,7 +2,8 @@ import { is, getBusinessObject } from 'bpmn-js/lib/util/ModelUtil';
 import entryFactory from 'bpmn-js-properties-panel/lib/factory/EntryFactory';
 import connectToBlockchain from '../../blockchain/connection';
 import cmdHelper from 'bpmn-js-properties-panel/lib/helper/CmdHelper';
-import {buttonExecutePressedSelection, buttonExecutePressedComposition, uploadDiff} from './ExecutionButtons'
+import {buttonExecutePressedSelection, buttonExecutePressedComposition, uploadDiff} from './ExecutionButtons';
+import { addCustomLabel } from './helper/TableDefinitionHelper';
 import  { modeler } from '../../../app';
 import Web3 from 'web3';
 const { ethereum } = window;
@@ -23,6 +24,13 @@ export default function addExecutionProps(group, element, bpmnFactory, translate
   const businessObject = getBusinessObject(element);
   if (is(element, 'bpmn:Message')) {
     addMessageProps(group, businessObject, translate);
+
+    addCustomLabel(group, element, bpmnFactory, translate, 'bpmn:Message', {
+      id: 'attributeValues',
+      description: 'Attribute values',
+      label: 'Values',
+      businessObjectProperty: 'attributeValues'
+    });
   }
 
   if (is(element, 'bpmn:Participant')) {
@@ -41,7 +49,7 @@ export default function addExecutionProps(group, element, bpmnFactory, translate
  * @param {Object} businessObject - The BPMN business object of the element.
  * @param {Function} translate - Function to translate labels and descriptions.
  */
-function connectParticipants() {
+function storeChor() {
 
   return domify('<div class="bpp-field-wrapper" style="flex-direction:column;">' +
     '<div class="bpp-properties-entry" ' + 'data-show="show"' + ' >' +
@@ -61,24 +69,18 @@ function addMessageProps(group, businessObject, translate) {
       props['name'] = values['messageItem'] || undefined;
       props['messageItem'] = values['messageItem'] || undefined;
 
-      return cmdHelper.updateProperties(element, props)
+      return cmdHelper.updateProperties(element, props);
     }
-
   }));
   const attributeItems = getParentChoreographyElement(businessObject).get('attributeItems');
   attributeItems.forEach((item, index) => addAttributeProps(group, businessObject, translate, item, index));
-  group.entries.push(entryFactory.textBox(translate, {
-    id: 'attributeValues',
-    label: translate('Attribute Value'),
-    modelProperty: 'attributeValues',
-  }));
   group.entries.push(
     {
       id: "uploadDiagram",
-      html: connectParticipants(),
+      html: storeChor(),
       modelProperty: "uploadDiagram",
       execute: async function () {
-        buttonExecutePressedComposition(businessObject)
+        buttonExecutePressedComposition(businessObject);
          // buttonExecutePressedComposition(businessObject);
       }
     }
@@ -86,7 +88,6 @@ function addMessageProps(group, businessObject, translate) {
   // }
 
 }
-
 
 
 /**

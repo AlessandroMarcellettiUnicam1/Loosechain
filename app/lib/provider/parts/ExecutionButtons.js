@@ -213,7 +213,7 @@ export async function buttonExecutePressedComposition(businessObject) {
     }
     let selectAttributes = message.selectedAttr;
     let values = [];
-    businessObject.attributeValues.split(';').forEach((e) => {
+    businessObject.$attrs.attributeValues.split(';').forEach((e) => {
         values.push(web3.utils.padRight(web3.utils.asciiToHex(e), 64));
     });
 
@@ -222,7 +222,13 @@ export async function buttonExecutePressedComposition(businessObject) {
     diff.messages=diff.messages.filter((e=>e.id!=message.id));
     const gasPrice = await web3.eth.getGasPrice();
     const gasLimit = 3000000;
-
+    let instance;
+    if(businessObject.$parent.get('rootElements').find((e) => e.$type === 'bpmn:Choreography').$attrs.instanceId) {
+        instance=businessObject.$parent.get('rootElements').find((e) => e.$type === 'bpmn:Choreography').$attrs.instanceId;
+    }else{
+        instance='0';
+    }
+    const hashInstance=web3.utils.padRight(web3.utils.asciiToHex(instance),64);
     if(tempActivity.outgoing && tempActivity.outgoing.length>0 && (tempActivity.outgoing[0].targetRef.$type.includes('Event') || tempActivity.outgoing[0].targetRef.$type.includes('Gateway'))) {
         genereteControlFlow(tempActivity.outgoing[0].targetRef,controlFlowElementList);
     }
@@ -235,7 +241,8 @@ export async function buttonExecutePressedComposition(businessObject) {
         diff.activityList,
         diff.controlFlowElementList,
         diff.edgeConditionList,
-        diff.messages
+        diff.messages,
+        hashInstance
     );
 
 
@@ -250,7 +257,7 @@ export async function buttonExecutePressedComposition(businessObject) {
             diff.controlFlowElementList,
             diff.edgeConditionList,
             diff.messages,
-            '0x3100000000000000000000000000000000000000000000000000000000000000',
+            hashInstance,
         )
         .send({
             from: '0x24cde0a1D5E6c12A9F2d4424b06d9185c6fAC6e9',

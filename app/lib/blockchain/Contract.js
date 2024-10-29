@@ -941,7 +941,7 @@ export const contractAbi = [
 	}
 ];
 
-export const contractAddress = '0x6174826c277F37BC268D404A73BBF72Ea09590A7';
+export const contractAddress = '0xde53B1DF39F7cb05BEa78E6bAAa1188e849bA188';
 //0x6D478dA4710494eBe77e6f6B8960d42d64bF480d contratto nella testnet troppe transazioni inutili
 //0x52eF9e94fa6C767908c63db4dA99d536Ff64685D altro contratto non ci è stato eseguito niente
 //0x52A2791D1df55d5d3b17fa0615a199703657D1b8

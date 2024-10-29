@@ -19,7 +19,8 @@ export async function translateDiagram(modeler, contract) {
   let keyMappingParticipants = [];
   let edgeConditionList = [];
   let subChoreographyList = [];
-
+  let idChoreography;
+  let idInstance;
   for (const e in elements) {
     if (elements[e].element.type.includes("Task")) {
       createActivity(elements[e], activityList, addressKeyMappingList, participantList, keyMappingParticipants)
@@ -30,10 +31,18 @@ export async function translateDiagram(modeler, contract) {
     } else if (elements[e].element.type.includes("bpmn:SequenceFlow")) {
       createEdegeList(elements[e], edgeConditionList)
     } else if (elements[e].element.type.includes("bpmn:SubChoreography")) {
+      console.log("subCho")
+    }else if (elements[e].element.type.includes("bpmn:Choreography") && !elements[e].element.type.includes("bpmn:ChoreographyTask")){
+      console.log(elements[e].element)
+      if(!elements[e].element.businessObject.$attrs.instanceId){
+        idInstance='0x3100000000000000000000000000000000000000000000000000000000000000';
+      }else{
+        idInstance=web3.utils.padRight(web3.utils.asciiToHex(elements[e].element.businessObject.$attrs.instanceId), 64);
+      }
+      idChoreography=web3.utils.padRight(web3.utils.asciiToHex(elements[e].element.id), 64);
     }
   }
 
-  storeInLocalStorage(modeler);
 
   console.log(activityList)
   console.log(messagges)
@@ -41,21 +50,17 @@ export async function translateDiagram(modeler, contract) {
   console.log(messageAttributesList)
   console.log(controlFlowElementList)
   console.log(edgeConditionList)
+  console.log(idChoreography)
+  console.log(idInstance)
   // console.log(subChoreographyList)
-  console.log(contract)
+  
   //TODO metodo Web3 per leggere l'address direttamente 
   const gasPrice = await web3.eth.getGasPrice();
   const gasLimit = 6721975;
-  const gasEstimation = await contract.methods.setInformation(activityList, messagges, participantList, messageAttributesList, controlFlowElementList, edgeConditionList,"0x3100000000000000000000000000000000000000000000000000000000000000","0x3100000000000000000000000000000000000000000000000000000000000000").send({ from: "0x24cde0a1D5E6c12A9F2d4424b06d9185c6fAC6e9", gas: gasLimit, gasPrice: gasPrice })
+  const gasEstimation = await contract.methods.setInformation(activityList, messagges, participantList, messageAttributesList, controlFlowElementList, edgeConditionList,idChoreography,idInstance).send({ from: "0x24cde0a1D5E6c12A9F2d4424b06d9185c6fAC6e9", gas: gasLimit, gasPrice: gasPrice })
   console.log(gasEstimation);
 }
-async function  storeInLocalStorage(modeler){
-  const result = await modeler.saveXML({ format: true });
-  console.log(result)
-  isDirty = false;
-  window.localStorage.setItem("xml",result.xml)
 
-}
 
 function createActivity(diagramElement, activityList, addressKeyMappingList, participantList, keyMappingParticipants) {
   let activity = {

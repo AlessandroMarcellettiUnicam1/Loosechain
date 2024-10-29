@@ -10,6 +10,7 @@ import { addTableDefinition } from './helper/TableDefinitionHelper';
  * @param {Function} translate - Function to translate labels and descriptions.
  */
 export default function addCompositionProps(group, element, bpmnFactory, translate) {
+  
   addTableDefinition(group, element, bpmnFactory, translate, 'bpmn:Choreography', {
     id: 'messageList',
     description: 'Message List',

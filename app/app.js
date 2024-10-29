@@ -113,6 +113,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     translateDiagram(modeler,contract);
   });
 
+  document.getElementById('js-save-progress').addEventListener('click',async () =>{
+    const result = await modeler.saveXML({ format: true });
+    window.localStorage.setItem("xml",result.xml);
+    location.reload();
+  });
+
   // create new diagram
   const newDiagram = document.getElementById('js-new-diagram');
   newDiagram.addEventListener('click', async e => {
