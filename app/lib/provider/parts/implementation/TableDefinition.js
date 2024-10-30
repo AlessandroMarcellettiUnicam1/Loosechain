@@ -59,18 +59,29 @@ function removeBusinessObjectElement(element, businessObject, idx, businessObjec
 }
 
 function updateBusinessObjectElement(element, businessObject, values, idx, businessObjectProperty) {
+  console.log(element,businessObject, values, idx, businessObjectProperty)
   const itemToUpdate = businessObject.get(businessObjectProperty)[idx];
-  console.log('updateElement element:', element);
-  console.log('updateElement values:', values);
-  console.log('updateElement idx:', idx);
-  if (businessObjectProperty.includes("participantItems")) {
+  const cavas=modeler.get('canvas');
+  const rootElement=cavas.getRootElement();
+  const participantList=rootElement.businessObject.participants;
+  if (!element.type.includes("bpmn:Participant") && businessObjectProperty.includes('participantItems')) {
+    console.log(participantList);
     const commandStack = modeler.get('commandStack');
     const participantProps = {
       id: 'newParticipant',
       name: values.name,
-      type: 'participant'
+      type: 'participant',
+      index:idx
     };
-    commandStack.execute('participant.create', participantProps);
+    if (idx+1>participantList.length) {
+      commandStack.execute('participant.create', participantProps);
+    } else {
+      participantList[idx].name=values.name;
+      modeler.get('eventBus').fire('element.changed', { 
+        element: participantList[idx],
+        additionalParam: true
+      });
+    }
   }
   return cmdHelper.updateBusinessObject(element, itemToUpdate, values);
 }

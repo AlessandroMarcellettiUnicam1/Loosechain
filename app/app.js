@@ -209,28 +209,48 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 });
 document.getElementById('js-create-participant').addEventListener('click', async () => {
-  // const commandStack = modeler.get('commandStack');
+  const participant = await modeler.createParticipant();
+  modeler.get('commandStack').execute('element.updateProperties', {
+    element: participant,
+    properties: {
+      name: 'New Participant'
+    }
+  });
 
-  // // Definisci le proprietà del nuovo partecipante
-  // const participantProps = {
-  //   id: 'newParticipant',
-  //   name: 'Nuovo Partecipante',
-  //   type: 'participant' // Assicurati di specificare il tipo corretto
-  // };
-
-  // // Crea il partecipante
-  // commandStack.execute('participant.create', participantProps);
-  // const command = modeler.get('commandStack').getCommand('participant.create', participantProps);
-  // modeler.get('commandStack').execute(command);
 });
 
 // listener for creating a new participant
 modeler.on('commandStack.participant.create.postExecuted', function(event) {
-  event.context.created.name=event.context.name;
-  console.log(event.context.name);
+
+  if(event.context.name){
+    event.context.created.name=event.context.name;
+  }
 });
+modeler.on('commandStack.element.updateProperties.postExecuted', function(event) {
+});
+modeler.get('eventBus').on('element.changed', function(event) {
+  const element = event.element;
+  if (event.additionalParam) {
+    const elements = modeler.get('elementRegistry').filter(el => el.businessObject.id === element.id);
+    elements.forEach(el => {
+      modeler.get('commandStack').execute('element.updateProperties', {
+        element: el,
+        properties: {
+          name: element.name
+        }
+      });
+    });
+  }
+  // Add your custom logic here
+});
+modeler.on('element.changed', function(event) {
+  const element = event.element;
+  // console.log(event)
 
-
+  if (element.type === 'bpmn:Participant' && element.businessObject.name) {
+    // console.log(`Participant name updated to: ${element.businessObject.name}`);
+  }
+});
 
 window.onload = function() {
   if (document.cookie.split(';').some((item) => item.trim().startsWith('selectedOption='))) {
