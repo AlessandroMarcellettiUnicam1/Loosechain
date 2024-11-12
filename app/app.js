@@ -19,7 +19,7 @@ const web3 = new Web3(ethereum);
 let lastFile;
 let isValidating = false;
 let isDirty = false;
-
+const numberOfInstance = [];
 // create and configure a chor-js instance
 export const modeler = new ChorJSModeler({
   container: '#canvas',
@@ -46,6 +46,7 @@ async function renderModel(newXml) {
     await modeler.importXML(newXml);
   }
   isDirty = false;
+
 }
 
 // returns the file name of the diagram currently being displayed
@@ -57,6 +58,7 @@ function diagramName() {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
+
   // initialize the blockchain connection and set up event listeners
   const contract = await connectToBlockchain();
 
@@ -65,7 +67,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     await updateUI(contract, modeler);
 
   }
-
+  // const elements = modeler.get('elementRegistry')["_elements"];
+  // for (const key in elements) {
+  //   if (elements[key].element.type === 'bpmn:Choreography') {
+  //     const id = elements[key].element.id;
+  //     const idBytes = web3.utils.padRight(web3.utils.asciiToHex(id), 64);
+  //     elements[key].element.businessObject.instanceNumberId = Number(await contract.methods.choInstanceListNumber(idBytes).call());
+  //     elements[key].element.businessObject.instanceNumberId=3;
+  //     console.log(elements[key].element.businessObject.instanceNumberId);
+  //   }
+  // }
   // download diagram as XML
   const downloadLink = document.getElementById('js-download-diagram');
   downloadLink.addEventListener('click', async e => {
@@ -208,25 +219,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 });
-document.getElementById('js-create-participant').addEventListener('click', async () => {
-  const participant = await modeler.createParticipant();
-  modeler.get('commandStack').execute('element.updateProperties', {
-    element: participant,
-    properties: {
-      name: 'New Participant'
-    }
-  });
 
-});
 
 // listener for creating a new participant
+// TODO quando creo un task i partecipanti devono essere vuoti
+// TODO durante execution cambio l'oggetto partecipante del task
 modeler.on('commandStack.participant.create.postExecuted', function(event) {
 
-  if(event.context.name){
-    event.context.created.name=event.context.name;
+  if (event.context.name) {
+    // event.context.created.name=event.context.name.substring(0,4);
+    event.context.created.name='';
   }
 });
 modeler.on('commandStack.element.updateProperties.postExecuted', function(event) {
+
 });
 modeler.get('eventBus').on('element.changed', function(event) {
   const element = event.element;
@@ -236,7 +242,7 @@ modeler.get('eventBus').on('element.changed', function(event) {
       modeler.get('commandStack').execute('element.updateProperties', {
         element: el,
         properties: {
-          name: element.name
+          name: ''
         }
       });
     });

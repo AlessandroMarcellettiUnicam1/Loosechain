@@ -58,6 +58,8 @@ function removeBusinessObjectElement(element, businessObject, idx, businessObjec
     [objectToRemove]);
 }
 
+//TODO Tab instaza serve un drop down menu per selezionare le varie istance
+
 function updateBusinessObjectElement(element, businessObject, values, idx, businessObjectProperty) {
   console.log(element,businessObject, values, idx, businessObjectProperty)
   const itemToUpdate = businessObject.get(businessObjectProperty)[idx];
@@ -65,7 +67,6 @@ function updateBusinessObjectElement(element, businessObject, values, idx, busin
   const rootElement=cavas.getRootElement();
   const participantList=rootElement.businessObject.participants;
   if (!element.type.includes("bpmn:Participant") && businessObjectProperty.includes('participantItems')) {
-    console.log(participantList);
     const commandStack = modeler.get('commandStack');
     const participantProps = {
       id: 'newParticipant',

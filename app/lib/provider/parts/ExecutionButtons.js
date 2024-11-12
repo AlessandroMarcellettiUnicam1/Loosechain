@@ -10,6 +10,7 @@ var domify = require('min-dom').domify;
 
 export async function buttonExecutePressedComposition(businessObject) {
     const contract = await connectToBlockchain();
+    console.log(businessObject)
     let nextActivity = [];
     let newMessage = [];
     let tempActivity;
@@ -89,7 +90,7 @@ export async function buttonExecutePressedComposition(businessObject) {
         messageOut: '',
         tempState: false,
     };
-
+    console.log(tempActivity)
     const asciiResult = web3.utils.asciiToHex(tempActivity.id);
     activity.id = web3.utils.padRight(asciiResult, 64);
     activity.name = web3.utils.padRight(asciiResult, 64);
@@ -260,7 +261,7 @@ export async function buttonExecutePressedComposition(businessObject) {
             hashInstance,
         )
         .send({
-            from: '0x24cde0a1D5E6c12A9F2d4424b06d9185c6fAC6e9',
+            from: '0xaBD182AFFE39B8826B11f76D0550118BAB6A5C2f',
             gas: gasLimit,
             gasPrice: gasPrice,
         });
@@ -416,108 +417,6 @@ function genereteControlFlow(element, controlFlowElementList) {
     controlFlowElementList.push(controlFlowElement);
 }
 
-// function createActivity(tempActivity) {
-//     console.log(tempActivity);
-//     let activity = {
-//         id: '',
-//         name: '',
-//         initiator: '',
-//         target: '',
-//         idInElement: '',
-//         idOutElement: '',
-//         messageIn: '',
-//         executed: false,
-//         messageOut: '',
-//         tempState: false,
-//     };
-
-//     const asciiResult = web3.utils.asciiToHex(tempActivity.id);
-//     activity.id = web3.utils.padRight(asciiResult, 64);
-//     activity.name = web3.utils.padRight(asciiResult, 64);
-//     if (tempActivity.participantRef[0].name) {
-//         activity.initiator = web3.utils.padRight(
-//             web3.utils.asciiToHex(tempActivity.participantRef[0].name),
-//             64
-//         );
-//     } else {
-//         activity.initiator = web3.utils.padRight(0, 64);
-//     }
-//     if (tempActivity.participantRef[1].name) {
-//         activity.target = web3.utils.padRight(
-//             web3.utils.asciiToHex(tempActivity.participantRef[1].name),
-//             64
-//         );
-//     } else {
-//         activity.target = web3.utils.padRight(0, 64);
-//     }
-//     if (tempActivity.incoming) {
-//         activity.idInElement = web3.utils.padRight(
-//             web3.utils.asciiToHex(tempActivity.incoming[0].sourceRef.id),
-//             64
-//         );
-//     } else if (tempActivity.$parent.$type.includes('bpmn:SubChoreography')) {
-//         console.log("CASO IN CUI L'attivita non è connessa");
-//     } else {
-//         activity.idInElement = web3.utils.padRight(0, 64);
-//     }
-//     if (tempActivity.outgoing && tempActivity.outgoing > 0) {
-//         activity.idOutElement = web3.utils.padRight(
-//             web3.utils.asciiToHex(tempActivity.outgoing[0].targetRef.id),
-//             64
-//         );
-//     } else if (tempActivity.$parent.$type.includes('bpmn:SubChoreography')) {
-//         activity.idOutElement = web3.utils.padRight(
-//             web3.utils.asciiToHex(tempActivity.$parent.outgoing[0].targetRef.id),
-//             64
-//         );
-//     } else {
-//         activity.idOutElement = web3.utils.padRight(0, 64);
-//     }
-//     if (tempActivity.messageFlowRef[1]) {
-//         activity.messageIn = web3.utils.padRight(
-//             web3.utils.asciiToHex(tempActivity.messageFlowRef[1].messageRef.id),
-//             64
-//         );
-//         activity.messageOut = web3.utils.padRight(
-//             web3.utils.asciiToHex(tempActivity.messageFlowRef[0].messageRef.id),
-//             64
-//         );
-//     } else {
-//         activity.messageIn = web3.utils.padRight(
-//             web3.utils.asciiToHex(tempActivity.messageFlowRef[0].messageRef.id),
-//             64
-//         );
-//         activity.messageOut = web3.utils.padRight(0, 64);
-//     }
-
-//     return activity;
-// }
-// function createMessage(tempActivity, newMessage) {
-//     tempActivity.messageFlowRef.forEach((msg) => {
-//         let message = {
-//             id: '',
-//             name: '',
-//             mappingKey: '',
-//             selectedAttr: [],
-//             sourceParticipant: '',
-//             targetParticipant: '',
-//             idActivity: '',
-//             executed: false,
-//             tempState: false,
-//         };
-//         const messageAsciiResult = web3.utils.asciiToHex(msg.messageRef.id);
-//         message.id = web3.utils.padRight(messageAsciiResult, 64);
-//         message.name = web3.utils.padRight(messageAsciiResult, 64);
-//         message.mappingKey = web3.utils.padRight(0, 64);
-//         message.sourceParticipant = '0x0000000000000000000000000000000000000000';
-//         message.targetParticipant = '0x0000000000000000000000000000000000000000';
-//         message.idActivity = web3.utils.padRight(
-//             web3.utils.asciiToHex(tempActivity.id),
-//             64
-//         );
-//         newMessage.push(message);
-//     });
-// }
 function createDiff(businessObject) {
 
   const elements = modeler.get('elementRegistry')['_elements'];
@@ -527,7 +426,6 @@ function createDiff(businessObject) {
   let controlFlowElementList = [];
   let messagges = [];
   let messageAttributesList = [];
-  // TODO: figure out how to pass the address to the front-end for the participant list
   let addressKeyMappingList = [];
   let participantList = [];
   let keyMappingParticipants = [];

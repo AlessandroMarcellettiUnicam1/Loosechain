@@ -1,4 +1,5 @@
 import Web3 from 'web3';
+import { modeler } from '../../app';
 /**
  * Fetch the current state of the contract and update the UI.
  *
@@ -8,6 +9,7 @@ import Web3 from 'web3';
 const { ethereum } = window;
 const web3 = new Web3(ethereum);
 export default async function updateUI(contract, modeler) {
+  console.log('getCurrentState');
   const state = await getCurrentState(contract,modeler);
   applyStateToUI(state, modeler);
 }
@@ -25,6 +27,7 @@ async function getCurrentState(contract,modeler) {
       }
     }
   }
+  // TODO get generica per istanza per colorare tutto di bianco
   let result=[];
   for (const e in elements) {
     const asciiResult=web3.utils.asciiToHex(elements[e].element.id);
@@ -40,25 +43,37 @@ async function getCurrentState(contract,modeler) {
   return result;
   // return await contract.methods.getCurrentState().call();
 }
-
+//TODO colorare i partecipanti che non hanno un messggio attaccato 
 function applyStateToUI(state, modeler) {
-  state.forEach(element => {
-    const elementId = web3.utils.hexToAscii(element.id);
-    let strokeColor, fillColor;
-    if (element.executed) {
-      strokeColor = 'green';
-      fillColor = 'lightgreen';
-    } else {
-      if (element.tempState) {
-        strokeColor = 'black';
-        fillColor = 'yellow';
+  const temp = state.filter(element => element.id !== web3.utils.padRight(0, 64));
+  if (temp.length>0) {
+    state.forEach(element => {
+      
+      const elementId = web3.utils.hexToAscii(element.id);
+      console.log(element);
+      console.log(elementId);
+      let strokeColor, fillColor;
+      if (element.executed) {
+        strokeColor = 'green';
+        fillColor = 'lightgreen';
       } else {
-        strokeColor = 'gray';
-        fillColor = 'lightgray';
+        if (element.tempState) {
+          strokeColor = 'black';
+          fillColor = 'yellow';
+        } else {
+          strokeColor = 'gray';
+          fillColor = 'lightgray';
+        }
       }
+      setTaskColor(modeler, elementId, strokeColor, fillColor);
+    });
+  } else {
+    const elements = modeler.get('elementRegistry')["_elements"];
+    for (const e in elements) {
+      let ele=elements[e].element;
+      setTaskColor(modeler,ele.id,'black','white');
     }
-    setTaskColor(modeler, elementId, strokeColor, fillColor);
-  });
+  }
   // let flag=false;
   // state.forEach(element=>{
   //   if (element.id!=web3.utils.padRight(0,64)) {

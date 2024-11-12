@@ -56,7 +56,7 @@ export async function translateDiagram(modeler, contract) {
   //TODO metodo Web3 per leggere l'address direttamente 
   const gasPrice = await web3.eth.getGasPrice();
   const gasLimit = 6721975;
-  const gasEstimation = await contract.methods.setInformation(activityList, messagges, participantList, messageAttributesList, controlFlowElementList, edgeConditionList,idChoreography,idInstance).send({ from: "0x24cde0a1D5E6c12A9F2d4424b06d9185c6fAC6e9", gas: gasLimit, gasPrice: gasPrice })
+  const gasEstimation = await contract.methods.setInformation(activityList, messagges, participantList, messageAttributesList, controlFlowElementList, edgeConditionList,idChoreography,idInstance).send({ from: "0xaBD182AFFE39B8826B11f76D0550118BAB6A5C2f", gas: gasLimit, gasPrice: gasPrice })
 }
 
 
@@ -184,7 +184,6 @@ function createMessage(diagramElement, messagges, activityList, messageAttribute
     })
     messageAttributesList.push(messageAttributeStruct);
   } else {
-    //TODO how store the messagge and the attrbutes in the case of composition
     //we thought about a sigle key mapping for all attributes but we have multiple key mapping (one for each messages) 
     //for all the attributes 
     if (messageAttributesList.length == 0) {
