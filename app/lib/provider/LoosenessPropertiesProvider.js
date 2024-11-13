@@ -3,10 +3,11 @@ import inherits from 'inherits';
 import selectionProps from './parts/SelectionProps';
 import compositionProps from './parts/CompositionProps';
 import executionProps from './parts/ExecutionProps';
-import entryFactory from 'bpmn-js-properties-panel/lib/factory/EntryFactory';
+import entryFactory, { selectBox } from 'bpmn-js-properties-panel/lib/factory/EntryFactory';
 import { addCustomLabel } from './parts/helper/TableDefinitionHelper';
 import connectToBlockchain from '../blockchain/connection';
 import { modeler } from '../../app';
+import cmdHelper from 'bpmn-js-properties-panel/lib/helper/CmdHelper';
 import contract from '../blockchain/contract';
 
 import updateUI from '../blockchain/uiUpdater';
@@ -28,6 +29,7 @@ export default function LoosenessPropertiesProvider(injector, bpmnFactory, trans
   const superGetTabs = this.getTabs;
   this.getTabs = function(element) {
     const tabs = superGetTabs.call(this, element);
+    console.log(element)
     tabs.push({
       id: 'modeling',
       label: 'Modeling',
@@ -39,7 +41,7 @@ export default function LoosenessPropertiesProvider(injector, bpmnFactory, trans
       label: 'Execution',
       groups: createExecutionGroups(element, bpmnFactory, translate)
     });
-    if (element.type.includes('bpmn:Choreography') && !element.type.includes('bpmn:ChoreographyTask')) {
+    if (element.type==='bpmn:Choreography') {
       tabs.push({
         id: 'choreography',
         label: 'Instance',
@@ -96,21 +98,25 @@ function createChoreographyGroups(element, bpmnFactory, translate) {
     label: 'Values',
     businessObjectProperty: 'instanceId',
   });
-
+  let instanceValue="";
   // TODO Correggere le async await
   let instanceOptions = [ { name: 'Select instance number', value: '1' }];
-
-  choreographyGroup.entries.push(
-    {
-      id: 'selectInstanceId',
-      html: createSelectedBox(),
-      modelProperty: 'selectInstanceId',
-      execute:()=>console.log('selectedOption'),
-      set:()=>console.log('selectedOption'),
-
+  choreographyGroup.entries.push(selectBox(translate, {
+    id: 'instanceNumberId',
+    label: translate('Select Instance Number'),
+    selectOptions: element.businessObject.instanceNumber ? element.businessObject.instanceNumber : instanceOptions,
+    modelProperty: 'instanceNumberId',
+    set: function(element, values) {
+      const props = {};
+      instanceValue = values["instanceNumberId"];
+      props["instanceId"] = values["instanceNumberId"];
+      element.businessObject.instanceId =instanceValue ;
+      return cmdHelper.updateBusinessObject(element, props);
     }
-  );
-
+  })
+);
+console.log(instanceValue);
+ 
   choreographyGroup.entries.push(
     {
       id: 'getIstance',
@@ -118,14 +124,11 @@ function createChoreographyGroups(element, bpmnFactory, translate) {
       modelProperty: 'getIstance',
       execute: async function() {
         const cntr=await connectToBlockchain();
-        // if (contract) {
-          console.log('execute');
-          await updateUI(cntr, modeler);
-        // }
+        console.log('execute');
+        await updateUI(cntr, modeler);
       }
     }
   );
-
   console.log(instanceOptions); //
   // Add choreography specific properties here
   // choreographyProps(choreographyGroup, element, bpmnFactory, translate);
@@ -141,14 +144,7 @@ function storeChor() {
     '<p>' + '' + '</p>' +
     '</div>');
 }
-function createSelectedBox() {
-  return domify('<div class="select-box-container">'+
- '<label for="instanceNumberId">Select Instance Number:</label>'+
-  '<select id="instanceNumberId" class="select-box">'+
-    '<option value="">Loading...</option> '+
-  '</select>'+
-'</div>');
-}
+
 async function tempFunction(element) {
   const id= element.id;
   const idBytes = web3.utils.padRight(web3.utils.asciiToHex(id), 64);

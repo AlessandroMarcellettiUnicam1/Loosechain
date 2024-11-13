@@ -12,15 +12,15 @@ import connectToBlockchain from './lib/blockchain/connection';
 import { translateDiagram } from './lib/blockchain/Translator.js';
 import setupEventListeners from './lib/blockchain/events';
 import updateUI from './lib/blockchain/uiUpdater';
+import cmdHelper from 'bpmn-js-properties-panel/lib/helper/CmdHelper.js';
 
 import Web3 from 'web3';
 const { ethereum } = window;
-export const  accountAddress='0xE4d90eaEa1e8c1fA52C7FB7293EdFBEB69D48e7a';
+export const accountAddress='0xE4d90eaEa1e8c1fA52C7FB7293EdFBEB69D48e7a';
 const web3 = new Web3(ethereum);
 let lastFile;
 let isValidating = false;
 let isDirty = false;
-const numberOfInstance = [];
 // create and configure a chor-js instance
 export const modeler = new ChorJSModeler({
   container: '#canvas',
@@ -97,6 +97,30 @@ document.addEventListener('DOMContentLoaded', async () => {
   // open file dialog
   document.getElementById('js-open-file').addEventListener('click', e => {
     document.getElementById('file-input').click();
+  });
+  // window.addEventListener('click', function(e) {
+    
+  // });
+  const canva=modeler.get('canvas');
+  const rootElement=canva.getRootElement();
+  console.log(rootElement);
+  const id= rootElement.id;
+  const idBytes = web3.utils.padRight(web3.utils.asciiToHex(id), 64);
+  const numberOfInstance=[];
+  contract.methods.choInstanceListNumber(idBytes).call().then(instanceNumberId => {
+    console.log(instanceNumberId);
+
+    for (let i = 0; i <= Number(instanceNumberId); i++) {
+      numberOfInstance.push({ name: i, value: i });
+    }
+    console.log(numberOfInstance);
+    // let props=[];
+    // props['instanceNumber'] =numberOfInstance;
+    // cmdHelper.updateBusinessObject(rootElement, props);
+    modeler.get('eventBus').fire('element.changed', {
+      element: rootElement,
+      numberOfInstance: numberOfInstance
+    });
   });
 
   // toggle side panels
@@ -224,18 +248,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 // listener for creating a new participant
 // TODO quando creo un task i partecipanti devono essere vuoti
 // TODO durante execution cambio l'oggetto partecipante del task
-modeler.on('commandStack.participant.create.postExecuted', function(event) {
 
-  if (event.context.name) {
-    // event.context.created.name=event.context.name.substring(0,4);
-    event.context.created.name='';
-  }
-});
 modeler.on('commandStack.element.updateProperties.postExecuted', function(event) {
-
+  if (event.context.properties.participantRef) {
+    console.log(event.context.element.businessObject);
+    event.context.element.businessObject.participantRef.push(event.context.properties.participantRef);
+  }
 });
 modeler.get('eventBus').on('element.changed', function(event) {
   const element = event.element;
+  const modeling = modeler.get('modeling');
   if (event.additionalParam) {
     const elements = modeler.get('elementRegistry').filter(el => el.businessObject.id === element.id);
     elements.forEach(el => {
@@ -247,17 +269,88 @@ modeler.get('eventBus').on('element.changed', function(event) {
       });
     });
   }
+  if (event.numberOfInstance) {
+    console.log('sono qui');
+    document.getElementById('camunda-instanceNumberId-select').innerHTML = event.numberOfInstance.map(instance => `<option value="${instance.value}">${instance.name}</option>`).join('');
+  }
   // Add your custom logic here
 });
-modeler.on('element.changed', function(event) {
-  const element = event.element;
-  // console.log(event)
+// modeler.on('element.changed',async function(event) {
+//   const canva=modeler.get('canvas');
+//   const rootElement=canva.getRootElement();
+//   console.log(rootElement);
+//   const id= rootElement.id;
+//   const idBytes = web3.utils.padRight(web3.utils.asciiToHex(id), 64);
+//   const numberOfInstance=[];
+//   const ctr=await connectToBlockchain();
+//   ctr.methods.choInstanceListNumber(idBytes).call().then(instanceNumberId => {
+//     console.log(instanceNumberId);
 
+//     for (let i = 0; i <= Number(instanceNumberId); i++) {
+//       numberOfInstance.push({ name: i, value: i });
+//     }
+//     console.log(numberOfInstance);
+//   });
+// });
+
+
+// modeler.get('eventBus').on('commandStack.shape.create.postExecuted', function(event) {
+//   const element = event.context.shape;
+//   const commandStack = modeler.get('commandStack');
+//   const bpmnFactory = modeler.get('bpmnFactory');
+//   const modeling = modeler.get('modeling');
+
+//   const newParticipant1 = bpmnFactory.create('bpmn:Participant', { name: '' });
+//   const newParticipant2 = bpmnFactory.create('bpmn:Participant', { name: '' });
+
+//   commandStack.execute('participant.create', newParticipant1);
+//   commandStack.execute('participant.create', newParticipant2);
+//   const currentParticipants = element.businessObject.participantRef;
+//   const updatedParticipants =[...currentParticipants];
+
+//   updatedParticipants[0]=newParticipant1.businessObject;
+//   // console.log(newParticipants);
+//   modeling.updateProperties(element, {
+//     name: "New ChoreographyTask",
+//     participantRef: updatedParticipants
+//   });
+
+// });
+
+// TODO mettere il partecipante creato, come target del task
+modeler.get('eventBus').on('commandStack.shape.create.postExecuted', function(event) {
+  const element = event.context.shape;
+  const commandStack= modeler.get('commandStack');
+  if (element.type === 'bpmn:ChoreographyTask') {
+    const modeling = modeler.get('modeling');
+    const canvas = modeler.get('canvas');
+    const bpmnFactory = modeler.get('bpmnFactory');
+    const selection = modeler.get('selection');
+    const newParticipant = bpmnFactory.create('bpmn:Participant', {
+      name: ''
+    });
+
+    commandStack.execute('participant.create', newParticipant);
+    console.log(newParticipant);
+  }
+});
+
+
+modeler.on('commandStack.participant.create.postExecuted', function(event) {
+  if (event.context.created.$type==='bpmn:Participant') {
+    console.log('Participant created');
+    event.context.created.name='';
+  }
+});
+
+
+
+modeler.on('participant.created', function(event) {
+  const element = event.element;
   if (element.type === 'bpmn:Participant' && element.businessObject.name) {
     // console.log(`Participant name updated to: ${element.businessObject.name}`);
   }
 });
-
 window.onload = function() {
   if (document.cookie.split(';').some((item) => item.trim().startsWith('selectedOption='))) {
     document.getElementById('js-set-cookie').style.display = 'none';

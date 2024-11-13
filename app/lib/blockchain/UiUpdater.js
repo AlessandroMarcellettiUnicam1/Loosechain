@@ -9,7 +9,6 @@ import { modeler } from '../../app';
 const { ethereum } = window;
 const web3 = new Web3(ethereum);
 export default async function updateUI(contract, modeler) {
-  console.log('getCurrentState');
   const state = await getCurrentState(contract,modeler);
   applyStateToUI(state, modeler);
 }
@@ -20,10 +19,10 @@ async function getCurrentState(contract,modeler) {
   for (const e in elements) {
 
     if (elements[e].element.type.includes('bpmn:Choreography') && !elements[e].element.type.includes('bpmn:ChoreographyTask')) {
-      if (!elements[e].element.businessObject.$attrs.instanceId) {
+      if (!elements[e].element.businessObject.instanceId) {
         idInstance='0x3100000000000000000000000000000000000000000000000000000000000000';
       } else {
-        idInstance=web3.utils.padRight(web3.utils.asciiToHex(elements[e].element.businessObject.$attrs.instanceId), 64);
+        idInstance=web3.utils.padRight(web3.utils.asciiToHex(elements[e].element.businessObject.instanceId), 64);
       }
     }
   }
@@ -43,7 +42,7 @@ async function getCurrentState(contract,modeler) {
   return result;
   // return await contract.methods.getCurrentState().call();
 }
-// TODO colorare i partecipanti che non hanno un messggio attaccato
+
 function applyStateToUI(state, modeler) {
   const temp = state.filter(element => element.id !== web3.utils.padRight(0, 64));
   if (temp.length>0) {
