@@ -15,6 +15,7 @@ import updateUI from './lib/blockchain/uiUpdater';
 
 import Web3 from 'web3';
 const { ethereum } = window;
+export const  accountAddress='0xE4d90eaEa1e8c1fA52C7FB7293EdFBEB69D48e7a';
 const web3 = new Web3(ethereum);
 let lastFile;
 let isValidating = false;
@@ -58,7 +59,6 @@ function diagramName() {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-
   // initialize the blockchain connection and set up event listeners
   const contract = await connectToBlockchain();
 

@@ -3,6 +3,7 @@
 import connectToBlockchain from '../../blockchain/connection';
 import Web3 from 'web3';
 import { modeler } from '../../../app';
+import {accountAddress} from '../../../app';
 const { ethereum } = window;
 const web3 = new Web3(ethereum);
 var domify = require('min-dom').domify;
@@ -261,7 +262,7 @@ export async function buttonExecutePressedComposition(businessObject) {
             hashInstance,
         )
         .send({
-            from: '0xaBD182AFFE39B8826B11f76D0550118BAB6A5C2f',
+            from: accountAddress,
             gas: gasLimit,
             gasPrice: gasPrice,
         });

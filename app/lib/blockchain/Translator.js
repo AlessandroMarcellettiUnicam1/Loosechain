@@ -1,5 +1,5 @@
 import connectToBlockchain from './connection';
-
+import { accountAddress } from '../../app';
 import Web3 from 'web3';
 const { ethereum } = window;
 const web3 = new Web3(ethereum);
@@ -56,7 +56,7 @@ export async function translateDiagram(modeler, contract) {
   //TODO metodo Web3 per leggere l'address direttamente 
   const gasPrice = await web3.eth.getGasPrice();
   const gasLimit = 6721975;
-  const gasEstimation = await contract.methods.setInformation(activityList, messagges, participantList, messageAttributesList, controlFlowElementList, edgeConditionList,idChoreography,idInstance).send({ from: "0xaBD182AFFE39B8826B11f76D0550118BAB6A5C2f", gas: gasLimit, gasPrice: gasPrice })
+  const gasEstimation = await contract.methods.setInformation(activityList, messagges, participantList, messageAttributesList, controlFlowElementList, edgeConditionList,idChoreography,idInstance).send({ from: accountAddress, gas: gasLimit, gasPrice: gasPrice })
 }
 
 

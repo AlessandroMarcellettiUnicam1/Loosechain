@@ -43,19 +43,17 @@ async function getCurrentState(contract,modeler) {
   return result;
   // return await contract.methods.getCurrentState().call();
 }
-//TODO colorare i partecipanti che non hanno un messggio attaccato 
+// TODO colorare i partecipanti che non hanno un messggio attaccato
 function applyStateToUI(state, modeler) {
   const temp = state.filter(element => element.id !== web3.utils.padRight(0, 64));
   if (temp.length>0) {
     state.forEach(element => {
-      
       const elementId = web3.utils.hexToAscii(element.id);
-      console.log(element);
-      console.log(elementId);
       let strokeColor, fillColor;
       if (element.executed) {
         strokeColor = 'green';
         fillColor = 'lightgreen';
+        // colorTheParticipant(elementId);
       } else {
         if (element.tempState) {
           strokeColor = 'black';
@@ -68,31 +66,16 @@ function applyStateToUI(state, modeler) {
       setTaskColor(modeler, elementId, strokeColor, fillColor);
     });
   } else {
-    const elements = modeler.get('elementRegistry')["_elements"];
+    const elements = modeler.get('elementRegistry')['_elements'];
     for (const e in elements) {
-      let ele=elements[e].element;
-      setTaskColor(modeler,ele.id,'black','white');
+      if (elements[e].element.type!=='bpmn:Participant') {
+        let ele=elements[e].element;
+        setTaskColor(modeler,ele.id,'black','white');
+      }
     }
   }
-  // let flag=false;
-  // state.forEach(element=>{
-  //   if (element.id!=web3.utils.padRight(0,64)) {
-  //     flag=true;
-  //   }
-  // });
-  // if(!flag){
-  //   colorAfeterBlockchain(modeler);
-  // }
-
 }
 
-function colorAfeterBlockchain(modeler) {
-  let elements = modeler.get('elementRegistry')['_elements'];
-  for (const e in elements) {
-    let ele=elements[e].element;
-    setTaskColor(modeler,ele.id,'black','white');
-  }
-}
 
 /**
  * Utility function to set the color of a task in the diagram.
