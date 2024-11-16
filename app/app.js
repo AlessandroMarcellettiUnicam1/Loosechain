@@ -2,7 +2,8 @@ import ChorJSModeler from 'chor-js/lib/Modeler';
 import Reporter from './lib/validator/Validator.js';
 import PropertiesPanelModule from 'bpmn-js-properties-panel';
 import PropertiesProviderModule from './lib/provider';
-
+import ChoreoModeling from 'chor-js/lib/features/modeling';
+import ChangeParticipantBandHandler from 'chor-js/lib/features/modeling/cmd/ChangeParticipantBandHandler.js';
 import looseValuesModdleDescriptor from './lib/descriptors/loose-values.json';
 
 import xml from './diagrams/CompositionCaseSim.bpmn';
@@ -12,9 +13,9 @@ import connectToBlockchain from './lib/blockchain/connection';
 import { translateDiagram } from './lib/blockchain/Translator.js';
 import setupEventListeners from './lib/blockchain/events';
 import updateUI from './lib/blockchain/uiUpdater';
-import cmdHelper from 'bpmn-js-properties-panel/lib/helper/CmdHelper.js';
 
 import Web3 from 'web3';
+
 const { ethereum } = window;
 export const accountAddress='0xE4d90eaEa1e8c1fA52C7FB7293EdFBEB69D48e7a';
 const web3 = new Web3(ethereum);
@@ -99,7 +100,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('file-input').click();
   });
   // window.addEventListener('click', function(e) {
-    
+
   // });
   const canva=modeler.get('canvas');
   const rootElement=canva.getRootElement();
@@ -316,31 +317,64 @@ modeler.get('eventBus').on('element.changed', function(event) {
 //   });
 
 // });
+console.log(modeler.get('commandStack'));
+modeler.get('eventBus').on('commandStack.band.swap.postExecuted', function(event) {
+  console.log('Band swapped');
+});
 
-// TODO mettere il partecipante creato, come target del task
 modeler.get('eventBus').on('commandStack.shape.create.postExecuted', function(event) {
   const element = event.context.shape;
-  const commandStack= modeler.get('commandStack');
-  if (element.type === 'bpmn:ChoreographyTask') {
-    const modeling = modeler.get('modeling');
-    const canvas = modeler.get('canvas');
-    const bpmnFactory = modeler.get('bpmnFactory');
-    const selection = modeler.get('selection');
-    const newParticipant = bpmnFactory.create('bpmn:Participant', {
-      name: ''
-    });
+  console.log(event)
+  // Assuming you have access to canvas and bpmnFactory
+  const canvas = modeler.get('canvas');
+  const bpmnFactory = modeler.get('bpmnFactory');
+  const eventBus=modeler.get('eventBus');
+  const modeling = modeler.get('modeling');
+  const commandStack = modeler.get('commandStack');
+  const injector = modeler.get('injector');
 
-    commandStack.execute('participant.create', newParticipant);
-    console.log(newParticipant);
-  }
+  const context={};
+  const changeParticipantBandHandler = new ChangeParticipantBandHandler(injector, commandStack);
+  commandStack.execute('participant.create', context);
+  const newParticipant=context.created;
+  commandStack.execute('participant.create', context);
+
+  console.log(context);
+  const activity = element.businessObject;
+  const newContext = {
+    bandShape:event.context.shape.bandShapes[0]
+  };
+  const oldParticipant = activity.participantRef[0];
+  changeParticipantBandHandler.changeParticipant(newContext,oldParticipant, newParticipant);
+
+});
+// TODO mettere il partecipante creato, come target del task
+modeler.get('eventBus').on('commandStack.shape.create.postExecuted', function(event) {
+  // const commandStack= modeler.get('commandStack');
+  // if (element.type === 'bpmn:ChoreographyTask') {
+  //   const modeling = modeler.get('modeling');
+  //   const canvas = modeler.get('canvas');
+  //   const bpmnFactory = modeler.get('bpmnFactory');
+  //   const selection = modeler.get('selection');
+  //   const newParticipant = bpmnFactory.create('bpmn:Participant', {
+  //     name: ''
+  //   });
+  //   commandStack.execute('participant.create', newParticipant);
+  //   element.businessObject.participantRef[1]=newParticipant;
+
+
+
+  //   console.log(newParticipant);
+  // }
 });
 
 
 modeler.on('commandStack.participant.create.postExecuted', function(event) {
-  if (event.context.created.$type==='bpmn:Participant') {
-    console.log('Participant created');
-    event.context.created.name='';
-  }
+  console.log("Participant created fuori if");
+  // if (event.context.created.$type==='bpmn:Participant') {
+  //   console.log('Participant created');
+  //   event.context.created.name='';
+  // }
 });
 
 

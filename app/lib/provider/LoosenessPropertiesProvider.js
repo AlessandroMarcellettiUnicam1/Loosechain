@@ -29,7 +29,6 @@ export default function LoosenessPropertiesProvider(injector, bpmnFactory, trans
   const superGetTabs = this.getTabs;
   this.getTabs = function(element) {
     const tabs = superGetTabs.call(this, element);
-    console.log(element)
     tabs.push({
       id: 'modeling',
       label: 'Modeling',
@@ -94,8 +93,8 @@ function createChoreographyGroups(element, bpmnFactory, translate) {
   };
   addCustomLabel(choreographyGroup, element, bpmnFactory, translate, 'bpmn:Choreography', {
     id: 'instanceId',
-    description: 'Attribute values',
-    label: 'Values',
+    description: 'Instace Id',
+    label: 'Instance Id',
     businessObjectProperty: 'instanceId',
   });
   let instanceValue="";
@@ -115,7 +114,7 @@ function createChoreographyGroups(element, bpmnFactory, translate) {
     }
   })
 );
-console.log(instanceValue);
+
  
   choreographyGroup.entries.push(
     {
@@ -124,12 +123,10 @@ console.log(instanceValue);
       modelProperty: 'getIstance',
       execute: async function() {
         const cntr=await connectToBlockchain();
-        console.log('execute');
         await updateUI(cntr, modeler);
       }
     }
   );
-  console.log(instanceOptions); //
   // Add choreography specific properties here
   // choreographyProps(choreographyGroup, element, bpmnFactory, translate);
   return [choreographyGroup];
@@ -150,7 +147,6 @@ async function tempFunction(element) {
   const idBytes = web3.utils.padRight(web3.utils.asciiToHex(id), 64);
   const instanceNumberId= await contract.methods.choInstanceListNumber(idBytes).call();
   let numberOfInstance=[];
-  console.log(instanceNumberId);
   for (let i = 1; i <= instanceNumberId; i++) {
     numberOfInstance.push({ name: i, value: i });
   }
