@@ -21,16 +21,6 @@
           "type": "loose:MessageValue"
         },
         {
-          "name": "instanceNumberId",
-          "isMany": true,
-          "type": "loose:InstanceValue"
-        },
-        {
-          "name": "instanceId",
-          "isMany": false,
-          "type": "loose:ChorInstanceId"
-        },
-        {
           "name": "attributeItems",
           "isMany": true,
           "type": "loose:AttributeValue"

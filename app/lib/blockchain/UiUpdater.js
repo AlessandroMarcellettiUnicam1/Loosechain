@@ -16,26 +16,30 @@ export default async function updateUI(contract, modeler) {
 async function getCurrentState(contract,modeler) {
   const elements=modeler.get('elementRegistry')['_elements'];
   let idInstance;
-  for (const e in elements) {
 
-    if (elements[e].element.type.includes('bpmn:Choreography') && !elements[e].element.type.includes('bpmn:ChoreographyTask')) {
-      if (!elements[e].element.businessObject.instanceId) {
-        idInstance='0x3100000000000000000000000000000000000000000000000000000000000000';
-      } else {
-        idInstance=web3.utils.padRight(web3.utils.asciiToHex(elements[e].element.businessObject.instanceId), 64);
+  for (const e in elements) {
+    if (elements[e].element.id!='__implicitroot') {
+      if (elements[e].element.type.includes('bpmn:Choreography') && !elements[e].element.type.includes('bpmn:ChoreographyTask')) {
+        if (!elements[e].element.businessObject.$attrs) {
+          idInstance='0x3100000000000000000000000000000000000000000000000000000000000000';
+        } else {
+          idInstance=web3.utils.padRight(web3.utils.asciiToHex(elements[e].element.businessObject.$attrs.ChorInstanceId), 64);
+        }
       }
     }
   }
   // TODO get generica per istanza per colorare tutto di bianco
   let result=[];
   for (const e in elements) {
-    const asciiResult=web3.utils.asciiToHex(elements[e].element.id);
-    if (elements[e].element.type.includes('Task')) {
-      result.push(await contract.methods.attivita(idInstance,web3.utils.padRight(asciiResult,64),1).call());
-    } else if (elements[e].element.type.includes('Message')) {
-      result.push(await contract.methods.messaggi(idInstance,web3.utils.padRight(asciiResult,64),1).call());
-    } else if (elements[e].element.type.includes('Event') ||elements[e].element.type.includes('Gateway')) {
-      result.push(await contract.methods.controlFlowElementList(idInstance,web3.utils.padRight(asciiResult,64)).call());
+    if (elements[e].element.id!='__implicitroot') {
+      const asciiResult=web3.utils.asciiToHex(elements[e].element.id);
+      if (elements[e].element.type.includes('Task')) {
+        result.push(await contract.methods.attivita(idInstance,web3.utils.padRight(asciiResult,64),1).call());
+      } else if (elements[e].element.type.includes('Message')) {
+        result.push(await contract.methods.messaggi(idInstance,web3.utils.padRight(asciiResult,64),1).call());
+      } else if (elements[e].element.type.includes('Event') ||elements[e].element.type.includes('Gateway')) {
+        result.push(await contract.methods.controlFlowElementList(idInstance,web3.utils.padRight(asciiResult,64)).call());
+      }
     }
   }
 

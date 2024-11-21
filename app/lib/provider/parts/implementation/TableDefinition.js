@@ -61,29 +61,29 @@ function removeBusinessObjectElement(element, businessObject, idx, businessObjec
 //TODO Tab instaza serve un drop down menu per selezionare le varie istance
 
 function updateBusinessObjectElement(element, businessObject, values, idx, businessObjectProperty) {
-  console.log(element,businessObject, values, idx, businessObjectProperty)
+
   const itemToUpdate = businessObject.get(businessObjectProperty)[idx];
   const cavas=modeler.get('canvas');
   const rootElement=cavas.getRootElement();
   const participantList=rootElement.businessObject.participants;
-  if (!element.type.includes("bpmn:Participant") && businessObjectProperty.includes('participantItems')) {
-    const commandStack = modeler.get('commandStack');
-    const participantProps = {
-      id: 'newParticipant',
-      name: values.name,
-      type: 'participant',
-      index:idx
-    };
-    if (idx+1>participantList.length) {
-      commandStack.execute('participant.create', participantProps);
-    } else {
-      participantList[idx].name=values.name;
-      modeler.get('eventBus').fire('element.changed', { 
-        element: participantList[idx],
-        additionalParam: true
-      });
-    }
-  }
+  // if (!element.type.includes("bpmn:Participant") && businessObjectProperty.includes('participantItems')) {
+  //   const commandStack = modeler.get('commandStack');
+  //   const participantProps = {
+  //     id: 'newParticipant',
+  //     name: values.name,
+  //     type: 'participant',
+  //     index:idx
+  //   };
+  //   if (idx+1>participantList.length) {
+  //     commandStack.execute('participant.create', participantProps);
+  //   } else {
+  //     participantList[idx].name=values.name;
+  //     modeler.get('eventBus').fire('element.changed', { 
+  //       element: participantList[idx],
+  //       additionalParam: true
+  //     });
+  //   }
+  // }
   return cmdHelper.updateBusinessObject(element, itemToUpdate, values);
 }
 /**

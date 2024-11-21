@@ -34,6 +34,6 @@ export function addTableDefinition(group, element, bpmnFactory, translate,
 export function addCustomLabel(group, element, bpmnFactory, translate,
   elementType, options) {
   if (is(element, elementType)) {
-  group.entries.push(createCustomLabel(element, bpmnFactory, translate, options));
+    group.entries.push(createCustomLabel(element, bpmnFactory, translate, options));
   }
 }

@@ -6,11 +6,12 @@ import executionProps from './parts/ExecutionProps';
 import entryFactory, { selectBox } from 'bpmn-js-properties-panel/lib/factory/EntryFactory';
 import { addCustomLabel } from './parts/helper/TableDefinitionHelper';
 import connectToBlockchain from '../blockchain/connection';
-import { modeler } from '../../app';
+import { modeler,numberOfInstance } from '../../app';
 import cmdHelper from 'bpmn-js-properties-panel/lib/helper/CmdHelper';
 import contract from '../blockchain/contract';
 
 import updateUI from '../blockchain/uiUpdater';
+
 var domify = require('min-dom').domify;
 
 import Web3 from 'web3';
@@ -92,13 +93,11 @@ function createChoreographyGroups(element, bpmnFactory, translate) {
     entries: []
   };
   addCustomLabel(choreographyGroup, element, bpmnFactory, translate, 'bpmn:Choreography', {
-    id: 'instanceId',
+    id: 'ChorInstanceId',
     description: 'Instace Id',
     label: 'Instance Id',
-    businessObjectProperty: 'instanceId',
+    businessObjectProperty: 'ChorInstanceId',
   });
-  let instanceValue="";
-  // TODO Correggere le async await
   let instanceOptions = [ { name: 'Select instance number', value: '1' }];
   choreographyGroup.entries.push(selectBox(translate, {
     id: 'instanceNumberId',
@@ -107,15 +106,13 @@ function createChoreographyGroups(element, bpmnFactory, translate) {
     modelProperty: 'instanceNumberId',
     set: function(element, values) {
       const props = {};
-      instanceValue = values["instanceNumberId"];
-      props["instanceId"] = values["instanceNumberId"];
-      element.businessObject.instanceId =instanceValue ;
+      element.businessObject.set('ChorInstanceId', values["instanceNumberId"].replace(/[^\x20-\x7E]/g, ''));
       return cmdHelper.updateBusinessObject(element, props);
     }
   })
-);
+  );
 
- 
+
   choreographyGroup.entries.push(
     {
       id: 'getIstance',

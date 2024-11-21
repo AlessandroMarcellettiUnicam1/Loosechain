@@ -105,17 +105,14 @@ function addParticipantProps(group, businessObject, translate) {
     id: 'participantItem',
     label: translate('Select Participant'),
     selectOptions: () => getParticipantItems(businessObject),
-    modelProperty: 'participantType'
-    // set: function (element, values) {
-    //   if(businessObject.participantItems.length<1){
-    //     let props = {};
-
-    //   props['name'] = values['participantType'].substring(0,5) || undefined;
-    //   props['participantType']=values['participantType'] || undefined;
-    //   return cmdHelper.updateProperties(element, props)
-    //   }
-    //   return cmdHelper.updateProperties(element,values)
-    // }
+    modelProperty: 'participantType',
+    set: function (element, values) {
+      let props = {};
+      props['name']=values['participantType'].slice(0,4) || undefined;
+      props['participantType'] = values['participantType'] || undefined;
+      return cmdHelper.updateProperties(element, props);
+    }
+    
   }));
 }
 
@@ -168,6 +165,5 @@ function getParticipantItems(businessObject) {
       // businessObject.$parent.get('participantItems')
       : businessObject.get('participantItems');
   }
-
   return [{ name: '', value: '' }, ...participantItems.map(item => ({ name: item.name, value: item.name }))];
 }

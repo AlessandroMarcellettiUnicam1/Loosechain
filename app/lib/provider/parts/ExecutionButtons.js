@@ -225,14 +225,17 @@ export async function buttonExecutePressedComposition(businessObject) {
     const gasPrice = await web3.eth.getGasPrice();
     const gasLimit = 3000000;
     let instance;
-    if(businessObject.$parent.get('rootElements').find((e) => e.$type === 'bpmn:Choreography').$attrs.instanceId) {
-        instance=businessObject.$parent.get('rootElements').find((e) => e.$type === 'bpmn:Choreography').$attrs.instanceId;
+    if(businessObject.$parent.get('rootElements').find((e) => e.$type === 'bpmn:Choreography').$attrs.ChorInstanceId) {
+        instance=businessObject.$parent.get('rootElements').find((e) => e.$type === 'bpmn:Choreography').$attrs.ChorInstanceId;
     }else{
         instance='0';
     }
     const hashInstance=web3.utils.padRight(web3.utils.asciiToHex(instance),64);
     if(tempActivity.outgoing && tempActivity.outgoing.length>0 && (tempActivity.outgoing[0].targetRef.$type.includes('Event') || tempActivity.outgoing[0].targetRef.$type.includes('Gateway'))) {
         genereteControlFlow(tempActivity.outgoing[0].targetRef,controlFlowElementList);
+    }
+    if(tempActivity.incoming && tempActivity.incoming.length>0 && (tempActivity.incoming[0].sourceRef.$type.includes('Event') || tempActivity.incoming[0].sourceRef.$type.includes('Gateway'))) {
+        genereteControlFlow(tempActivity.incoming[0].sourceRef,controlFlowElementList);
     }
     console.log(
         activity,
@@ -437,11 +440,11 @@ function createDiff(businessObject) {
       createActivity(elements[e], activityList, addressKeyMappingList, participantList, keyMappingParticipants);
     } else if (elements[e].element.type.includes('Message') && !checkMessageColor(modeler.get('elementRegistry').getGraphics(elements[e].element.id).querySelector('g').children[1].style.fill)) {
       createMessage(elements[e], messagges, activityList, messageAttributesList);
-    } else if (!elements[e].element.businessObject.di.fill && (elements[e].element.type.includes('Event') || elements[e].element.type.includes('Gateway'))) {
+    } else if (!elements[e].element.businessObject && (elements[e].element.type.includes('Event') || elements[e].element.type.includes('Gateway'))) {
       createGatewayElement(elements[e], controlFlowElementList);
     } else if (elements[e].element.type.includes('bpmn:SequenceFlow')) {
       createEdegeList(elements[e], edgeConditionList);
-    } else if (elements[e].element.type.includes('bpmn:SubChoreography')) {
+    } else if (elements[e].element.type.includes('bpmn:SubChoreography')){
   }
 }
 diff={

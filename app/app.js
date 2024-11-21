@@ -3,9 +3,13 @@ import Reporter from './lib/validator/Validator.js';
 import PropertiesPanelModule from 'bpmn-js-properties-panel';
 import PropertiesProviderModule from './lib/provider';
 import ChoreoModeling from 'chor-js/lib/features/modeling';
+import CreateParticipantBandHandler from 'chor-js/lib/features/modeling/cmd/CreateParticipantBandHandler.js';
 import ChangeParticipantBandHandler from 'chor-js/lib/features/modeling/cmd/ChangeParticipantBandHandler.js';
 import looseValuesModdleDescriptor from './lib/descriptors/loose-values.json';
-
+import { updateParticipantBandKinds } from 'chor-js/lib/features/modeling/cmd/ChangeParticipantBandHandler.js';
+import BpmnPropertiesProvider from 'bpmn-js-properties-panel/lib/provider/bpmn/BpmnPropertiesProvider';
+import cmdHelper from 'bpmn-js-properties-panel/lib/helper/CmdHelper';
+import { is } from 'bpmn-js/lib/util/ModelUtil';
 import xml from './diagrams/CompositionCaseSim.bpmn';
 import blankXml from './diagrams/newDiagram.bpmn';
 
@@ -15,13 +19,15 @@ import setupEventListeners from './lib/blockchain/events';
 import updateUI from './lib/blockchain/uiUpdater';
 
 import Web3 from 'web3';
+import { isInitiating } from 'chor-js/lib/util/BandUtil.js';
 
 const { ethereum } = window;
-export const accountAddress='0xE4d90eaEa1e8c1fA52C7FB7293EdFBEB69D48e7a';
+export const accountAddress='0xe1cfA2b2AF60E5cEd29a75c0fBC285BC7e5E7921';
 const web3 = new Web3(ethereum);
 let lastFile;
 let isValidating = false;
 let isDirty = false;
+let numberOfInstance;
 // create and configure a chor-js instance
 export const modeler = new ChorJSModeler({
   container: '#canvas',
@@ -42,13 +48,22 @@ export const modeler = new ChorJSModeler({
 
 // display the given model (XML representation)
 async function renderModel(newXml) {
+  
+  // console.log(numberOfInstance)
+
   if (window.localStorage.getItem('xml')) {
     await modeler.importXML(window.localStorage.getItem('xml'));
   } else {
     await modeler.importXML(newXml);
   }
+  // const canva=modeler.get('canvas');
+  // const rootElement=canva.getRootElement();
+  // console.log(rootElement);
+  // const id= rootElement.id;
+  // const idBytes = web3.utils.padRight(web3.utils.asciiToHex(id), 64);
+  // const contract1 = await connectToBlockchain();
+  // numberOfInstance=await contract1.methods.choInstanceListNumber(idBytes).call();
   isDirty = false;
-
 }
 
 // returns the file name of the diagram currently being displayed
@@ -68,16 +83,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     await updateUI(contract, modeler);
 
   }
-  // const elements = modeler.get('elementRegistry')["_elements"];
-  // for (const key in elements) {
-  //   if (elements[key].element.type === 'bpmn:Choreography') {
-  //     const id = elements[key].element.id;
-  //     const idBytes = web3.utils.padRight(web3.utils.asciiToHex(id), 64);
-  //     elements[key].element.businessObject.instanceNumberId = Number(await contract.methods.choInstanceListNumber(idBytes).call());
-  //     elements[key].element.businessObject.instanceNumberId=3;
-  //     console.log(elements[key].element.businessObject.instanceNumberId);
-  //   }
-  // }
+
+
   // download diagram as XML
   const downloadLink = document.getElementById('js-download-diagram');
   downloadLink.addEventListener('click', async e => {
@@ -102,27 +109,55 @@ document.addEventListener('DOMContentLoaded', async () => {
   // window.addEventListener('click', function(e) {
 
   // });
+
+
+  // document.querySelector('[data-entry="InstanceValue"]').addEventListener('click', e => {
+  //   if (document.getElementById('camunda-InstanceValue-select')) {
+  //     document.getElementById('camunda-InstanceValue-select').addEventListener('click',e=>{
+       
+  //       });
+  //       document.getElementById('camunda-InstanceValue-select').addEventListener('change',e=>{
+  //         let props={};
+  //         props['ChorInstanceId'] = document.getElementById('camunda-InstanceValue-select').value.replace(/[^\x20-\x7E]/g, '');
+  //         cmdHelper.updateProperties(rootElement, props);
+          
+  //       });
+  //       console.log(rootElement)
+  //     });
+
+  //   }
+
+  // });
+
+
+
+
   const canva=modeler.get('canvas');
   const rootElement=canva.getRootElement();
   console.log(rootElement);
   const id= rootElement.id;
   const idBytes = web3.utils.padRight(web3.utils.asciiToHex(id), 64);
-  const numberOfInstance=[];
-  contract.methods.choInstanceListNumber(idBytes).call().then(instanceNumberId => {
-    console.log(instanceNumberId);
-
-    for (let i = 0; i <= Number(instanceNumberId); i++) {
+  contract.methods.choInstanceListNumber(idBytes).call().then(result=>{
+    const numberOfInstance=[];
+    result.forEach(i => {
       numberOfInstance.push({ name: i, value: i });
-    }
-    console.log(numberOfInstance);
-    // let props=[];
-    // props['instanceNumber'] =numberOfInstance;
-    // cmdHelper.updateBusinessObject(rootElement, props);
+    });
+    
     modeler.get('eventBus').fire('element.changed', {
       element: rootElement,
       numberOfInstance: numberOfInstance
     });
   });
+  // contract.methods.choInstanceListNumber(idBytes).call().then(instanceNumberId => {
+  //   for (let i = 0; i <= Number(instanceNumberId); i++) {
+  //     numberOfInstance.push({ name: i, value: i });
+  //   }
+    
+  //   modeler.get('eventBus').fire('element.changed', {
+  //     element: rootElement,
+  //     numberOfInstance: numberOfInstance
+  // });
+  // });
 
   // toggle side panels
   const panels = Array.prototype.slice.call(
@@ -250,12 +285,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 // TODO quando creo un task i partecipanti devono essere vuoti
 // TODO durante execution cambio l'oggetto partecipante del task
 
-modeler.on('commandStack.element.updateProperties.postExecuted', function(event) {
-  if (event.context.properties.participantRef) {
-    console.log(event.context.element.businessObject);
-    event.context.element.businessObject.participantRef.push(event.context.properties.participantRef);
-  }
-});
 modeler.get('eventBus').on('element.changed', function(event) {
   const element = event.element;
   const modeling = modeler.get('modeling');
@@ -271,120 +300,45 @@ modeler.get('eventBus').on('element.changed', function(event) {
     });
   }
   if (event.numberOfInstance) {
-    console.log('sono qui');
-    document.getElementById('camunda-instanceNumberId-select').innerHTML = event.numberOfInstance.map(instance => `<option value="${instance.value}">${instance.name}</option>`).join('');
+    
+    document.getElementById('camunda-instanceNumberId-select').innerHTML = event.numberOfInstance.map(instance => `<option value="${web3.utils.hexToAscii(instance.value)}">${web3.utils.hexToAscii(instance.name)}</option>`).join('');
   }
   // Add your custom logic here
 });
-// modeler.on('element.changed',async function(event) {
-//   const canva=modeler.get('canvas');
-//   const rootElement=canva.getRootElement();
-//   console.log(rootElement);
-//   const id= rootElement.id;
-//   const idBytes = web3.utils.padRight(web3.utils.asciiToHex(id), 64);
-//   const numberOfInstance=[];
-//   const ctr=await connectToBlockchain();
-//   ctr.methods.choInstanceListNumber(idBytes).call().then(instanceNumberId => {
-//     console.log(instanceNumberId);
-
-//     for (let i = 0; i <= Number(instanceNumberId); i++) {
-//       numberOfInstance.push({ name: i, value: i });
-//     }
-//     console.log(numberOfInstance);
-//   });
-// });
 
 
-// modeler.get('eventBus').on('commandStack.shape.create.postExecuted', function(event) {
-//   const element = event.context.shape;
-//   const commandStack = modeler.get('commandStack');
-//   const bpmnFactory = modeler.get('bpmnFactory');
-//   const modeling = modeler.get('modeling');
-
-//   const newParticipant1 = bpmnFactory.create('bpmn:Participant', { name: '' });
-//   const newParticipant2 = bpmnFactory.create('bpmn:Participant', { name: '' });
-
-//   commandStack.execute('participant.create', newParticipant1);
-//   commandStack.execute('participant.create', newParticipant2);
-//   const currentParticipants = element.businessObject.participantRef;
-//   const updatedParticipants =[...currentParticipants];
-
-//   updatedParticipants[0]=newParticipant1.businessObject;
-//   // console.log(newParticipants);
-//   modeling.updateProperties(element, {
-//     name: "New ChoreographyTask",
-//     participantRef: updatedParticipants
-//   });
-
-// });
-console.log(modeler.get('commandStack'));
-modeler.get('eventBus').on('commandStack.band.swap.postExecuted', function(event) {
-  console.log('Band swapped');
-});
 
 modeler.get('eventBus').on('commandStack.shape.create.postExecuted', function(event) {
-  const element = event.context.shape;
-  console.log(event)
-  // Assuming you have access to canvas and bpmnFactory
-  const canvas = modeler.get('canvas');
-  const bpmnFactory = modeler.get('bpmnFactory');
-  const eventBus=modeler.get('eventBus');
-  const modeling = modeler.get('modeling');
-  const commandStack = modeler.get('commandStack');
-  const injector = modeler.get('injector');
-
-  const context={};
-  const changeParticipantBandHandler = new ChangeParticipantBandHandler(injector, commandStack);
-  commandStack.execute('participant.create', context);
-  const newParticipant=context.created;
-  commandStack.execute('participant.create', context);
-
-  console.log(context);
-  const activity = element.businessObject;
-  const newContext = {
-    bandShape:event.context.shape.bandShapes[0]
-  };
-  const oldParticipant = activity.participantRef[0];
-  changeParticipantBandHandler.changeParticipant(newContext,oldParticipant, newParticipant);
-
-});
-// TODO mettere il partecipante creato, come target del task
-modeler.get('eventBus').on('commandStack.shape.create.postExecuted', function(event) {
-  // const commandStack= modeler.get('commandStack');
-  // if (element.type === 'bpmn:ChoreographyTask') {
-  //   const modeling = modeler.get('modeling');
-  //   const canvas = modeler.get('canvas');
-  //   const bpmnFactory = modeler.get('bpmnFactory');
-  //   const selection = modeler.get('selection');
-  //   const newParticipant = bpmnFactory.create('bpmn:Participant', {
-  //     name: ''
-  //   });
-  //   commandStack.execute('participant.create', newParticipant);
-  //   element.businessObject.participantRef[1]=newParticipant;
-
-
-
-  //   console.log(newParticipant);
-  // }
-});
-
-
-modeler.on('commandStack.participant.create.postExecuted', function(event) {
-  console.log("Participant created fuori if");
-  // if (event.context.created.$type==='bpmn:Participant') {
-  //   console.log('Participant created');
-  //   event.context.created.name='';
-  // }
-});
-
-
-
-modeler.on('participant.created', function(event) {
-  const element = event.element;
-  if (element.type === 'bpmn:Participant' && element.businessObject.name) {
-    // console.log(`Participant name updated to: ${element.businessObject.name}`);
+  if (is(event.context.shape.businessObject, 'bpmn:ChoreographyActivity')) {
+    const changeParticipantBandHandler = new ChangeParticipantBandHandler(modeler.get('injector'),modeler.get('modeling'), modeler.get('commandStack'));
+    const createParticipantBandHandler = new CreateParticipantBandHandler(modeler.get('injector'),modeler.get('canvas'),modeler.get('bpmnFactory'),modeler.get('elementFactory'),modeler.get('moddle'),modeler.get('modeling'));
+    changePartipant(createParticipantBandHandler,changeParticipantBandHandler,0,event,true);
+    changePartipant(createParticipantBandHandler,changeParticipantBandHandler,1,event,false);
   }
 });
+
+function changePartipant(createBandHandler,changeParticipantHandler,index,event,isInitiating) {
+  const context = {
+    activityShape: event.context.shape,
+    bandShape:event.context.shape.bandShapes[index],
+    delete:false,
+    index:index,
+    isInitiating:isInitiating,
+    participant:event.context.shape.bandShapes[index].businessObject,
+  };
+  createBandHandler.preExecute(context);
+  changeParticipantHandler.preExecute(context);
+  try {
+    context.newParticipant.name='';
+  } catch (e) {
+    console.log(e);
+  }
+  changeParticipantHandler.execute(context);
+  changeParticipantHandler.postExecute(context);
+}
+
+
+
 window.onload = function() {
   if (document.cookie.split(';').some((item) => item.trim().startsWith('selectedOption='))) {
     document.getElementById('js-set-cookie').style.display = 'none';

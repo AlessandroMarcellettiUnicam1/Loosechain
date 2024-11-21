@@ -33,10 +33,10 @@ export async function translateDiagram(modeler, contract) {
     } else if (elements[e].element.type.includes("bpmn:SubChoreography")) {
       console.log("subCho")
     }else if (elements[e].element.type.includes("bpmn:Choreography") && !elements[e].element.type.includes("bpmn:ChoreographyTask")){
-      if(!elements[e].element.businessObject.$attrs.instanceId){
+      if(!elements[e].element.businessObject.$attrs.ChorInstanceId){
         idInstance='0x3100000000000000000000000000000000000000000000000000000000000000';
       }else{
-        idInstance=web3.utils.padRight(web3.utils.asciiToHex(elements[e].element.businessObject.$attrs.instanceId), 64);
+        idInstance=web3.utils.padRight(web3.utils.asciiToHex(elements[e].element.businessObject.$attrs.ChorInstanceId), 64);
       }
       idChoreography=web3.utils.padRight(web3.utils.asciiToHex(elements[e].element.id), 64);
     }
