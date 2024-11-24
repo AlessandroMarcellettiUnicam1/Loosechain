@@ -48,7 +48,7 @@ export const modeler = new ChorJSModeler({
 
 // display the given model (XML representation)
 async function renderModel(newXml) {
-  
+
   // console.log(numberOfInstance)
 
   if (window.localStorage.getItem('xml')) {
@@ -105,54 +105,34 @@ document.addEventListener('DOMContentLoaded', async () => {
   // open file dialog
   document.getElementById('js-open-file').addEventListener('click', e => {
     document.getElementById('file-input').click();
+    localStorage.clear();
   });
-  // window.addEventListener('click', function(e) {
-
-  // });
-
-
-  // document.querySelector('[data-entry="InstanceValue"]').addEventListener('click', e => {
-  //   if (document.getElementById('camunda-InstanceValue-select')) {
-  //     document.getElementById('camunda-InstanceValue-select').addEventListener('click',e=>{
-       
-  //       });
-  //       document.getElementById('camunda-InstanceValue-select').addEventListener('change',e=>{
-  //         let props={};
-  //         props['ChorInstanceId'] = document.getElementById('camunda-InstanceValue-select').value.replace(/[^\x20-\x7E]/g, '');
-  //         cmdHelper.updateProperties(rootElement, props);
-          
-  //       });
-  //       console.log(rootElement)
-  //     });
-
-  //   }
-
-  // });
 
 
 
 
-  const canva=modeler.get('canvas');
-  const rootElement=canva.getRootElement();
-  console.log(rootElement);
-  const id= rootElement.id;
-  const idBytes = web3.utils.padRight(web3.utils.asciiToHex(id), 64);
-  contract.methods.choInstanceListNumber(idBytes).call().then(result=>{
-    const numberOfInstance=[];
-    result.forEach(i => {
-      numberOfInstance.push({ name: i, value: i });
-    });
-    
-    modeler.get('eventBus').fire('element.changed', {
-      element: rootElement,
-      numberOfInstance: numberOfInstance
+  document.querySelector('[data-entry="instanceNumberId"]').addEventListener('click', e => {
+    const canva=modeler.get('canvas');
+    const rootElement=canva.getRootElement();
+    const id= rootElement.id;
+    const idBytes = web3.utils.padRight(web3.utils.asciiToHex(id), 64);
+    contract.methods.choInstanceListNumber(idBytes).call().then(result=>{
+      const numberOfInstance=[];
+      result.forEach(i => {
+        numberOfInstance.push({ name: i, value: i });
+      });
+
+      modeler.get('eventBus').fire('element.changed', {
+        element: rootElement,
+        numberOfInstance: numberOfInstance
+      });
     });
   });
   // contract.methods.choInstanceListNumber(idBytes).call().then(instanceNumberId => {
   //   for (let i = 0; i <= Number(instanceNumberId); i++) {
   //     numberOfInstance.push({ name: i, value: i });
   //   }
-    
+
   //   modeler.get('eventBus').fire('element.changed', {
   //     element: rootElement,
   //     numberOfInstance: numberOfInstance
@@ -190,10 +170,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     location.reload();
   });
 
-  document.getElementById('js-set-cookie').addEventListener('click', function() {
-    document.cookie = 'selectedOption=true; path=/; max-age=3600'; // Cookie expires in 1 hour
-    this.style.display = 'none'; // Hide the button
-    location.reload();
+  const lockClosed = document.getElementById('lock-closed');
+  const lockOpened = document.getElementById('lock-opened');
+
+  lockClosed.addEventListener('click', () => {
+    lockClosed.setAttribute('button-value', 'false');
+    lockClosed.style.display = 'none';
+    lockOpened.style.display = 'inline-block';
+  });
+
+  lockOpened.addEventListener('click', () => {
+    lockClosed.setAttribute('button-value', 'true');
+
+    lockOpened.style.display = 'none';
+    lockClosed.style.display = 'inline-block';
   });
 
   // create new diagram
@@ -268,16 +258,31 @@ document.addEventListener('DOMContentLoaded', async () => {
       reporter.validateDiagram();
     }
   });
-  if (document.cookie.split(';').some((item) => item.trim().startsWith('selectedOption='))) {
-    document.getElementById('js-set-cookie').style.display = 'none';
-    modeler.on('commandStack.connection.create.postExecuted', function(event) {
+  // TODO rimettere la funzione bloccante
+  modeler.on('commandStack.connection.create.preExecuted', function(event) {
+    console.log(event)
+    // if (lockClosed.getAttribute('button-value') === 'true') {
+    //   const edgeAdded = event.context;
+    //   const elementTarget = edgeAdded.target;
+    //   if (elementTarget.businessObject.di.fill && elementTarget.businessObject.di.fill.includes('lightgreen')) {
+    //     modeler.get('commandStack').undo();
+    //   }
+    // }
+  });
+  modeler.on('commandStack.connection.create.postExecuted', function(event) {
+    if(lockClosed.getAttribute('button-value')){
+      console.log("true")
+    }
+    if (lockClosed.getAttribute('button-value') === 'true') {
+      
       const edgeAdded = event.context;
       const elementTarget = edgeAdded.target;
+      console.log(elementTarget.businessObject.di.fill)
       if (elementTarget.businessObject.di.fill && elementTarget.businessObject.di.fill.includes('lightgreen')) {
         modeler.get('commandStack').undo();
       }
-    });
-  }
+    }
+  });
 });
 
 
@@ -300,12 +305,13 @@ modeler.get('eventBus').on('element.changed', function(event) {
     });
   }
   if (event.numberOfInstance) {
-    
-    document.getElementById('camunda-instanceNumberId-select').innerHTML = event.numberOfInstance.map(instance => `<option value="${web3.utils.hexToAscii(instance.value)}">${web3.utils.hexToAscii(instance.name)}</option>`).join('');
+    document.getElementById('camunda-instanceNumberId-select').innerHTML = event.numberOfInstance.map(instance => `<option value="${cleanData(instance.value)}">${cleanData(instance.name)}</option>`).join('');
   }
-  // Add your custom logic here
 });
+function cleanData(bytes32) {
+  return web3.utils.hexToAscii(bytes32).split('+')[1]?web3.utils.hexToAscii(bytes32).split('+')[1]:web3.utils.hexToAscii(bytes32);
 
+}
 
 
 modeler.get('eventBus').on('commandStack.shape.create.postExecuted', function(event) {
@@ -339,11 +345,6 @@ function changePartipant(createBandHandler,changeParticipantHandler,index,event,
 
 
 
-window.onload = function() {
-  if (document.cookie.split(';').some((item) => item.trim().startsWith('selectedOption='))) {
-    document.getElementById('js-set-cookie').style.display = 'none';
-  }
-};
 // expose bpmnjs to window for debugging purposes
 window.bpmnjs = modeler;
 

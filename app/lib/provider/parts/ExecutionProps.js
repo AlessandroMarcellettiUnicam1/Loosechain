@@ -2,9 +2,9 @@ import { is, getBusinessObject } from 'bpmn-js/lib/util/ModelUtil';
 import entryFactory from 'bpmn-js-properties-panel/lib/factory/EntryFactory';
 import connectToBlockchain from '../../blockchain/connection';
 import cmdHelper from 'bpmn-js-properties-panel/lib/helper/CmdHelper';
-import {buttonExecutePressedSelection, buttonExecutePressedComposition, uploadDiff} from './ExecutionButtons';
+import { buttonExecutePressedSelection, buttonExecutePressedComposition, uploadDiff } from './ExecutionButtons';
 import { addCustomLabel } from './helper/TableDefinitionHelper';
-import  { modeler } from '../../../app';
+import { modeler } from '../../../app';
 import Web3 from 'web3';
 const { ethereum } = window;
 const web3 = new Web3(ethereum);
@@ -23,14 +23,9 @@ var domify = require('min-dom').domify;
 export default function addExecutionProps(group, element, bpmnFactory, translate) {
   const businessObject = getBusinessObject(element);
   if (is(element, 'bpmn:Message')) {
-    addMessageProps(group, businessObject, translate);
+    addMessageProps(group, businessObject, translate,element,bpmnFactory);
 
-    addCustomLabel(group, element, bpmnFactory, translate, 'bpmn:Message', {
-      id: 'attributeValues',
-      description: 'Attribute values',
-      label: 'Values',
-      businessObjectProperty: 'attributeValues'
-    });
+    
   }
 
   if (is(element, 'bpmn:Participant')) {
@@ -55,16 +50,16 @@ function storeChor() {
     '<div class="bpp-properties-entry" ' + 'data-show="show"' + ' >' +
     '</div>' +
     '<button type="button"  class="btn btn-outline-primary" data-action="execute" ><span>Execute </span></button>' +
-    '<p>' + "" + '</p>' +
-    "</div>");
+    '<p>' + '' + '</p>' +
+    '</div>');
 }
-function addMessageProps(group, businessObject, translate) {
+function addMessageProps(group, businessObject, translate,element,bpmnFactory) {
   group.entries.push(entryFactory.selectBox(translate, {
     id: 'messageItem',
     label: translate('Select Message'),
     selectOptions: () => getMessageItems(businessObject),
     modelProperty: 'messageItem',
-    set: function (element, values) {
+    set: function(element, values) {
       let props = {};
       props['name'] = values['messageItem'] || undefined;
       props['messageItem'] = values['messageItem'] || undefined;
@@ -72,16 +67,22 @@ function addMessageProps(group, businessObject, translate) {
       return cmdHelper.updateProperties(element, props);
     }
   }));
+  addCustomLabel(group, element, bpmnFactory, translate, 'bpmn:Message', {
+    id: 'attributeValues',
+    description: 'Attribute values',
+    label: 'Values',
+    businessObjectProperty: 'attributeValues'
+  });
   const attributeItems = getParentChoreographyElement(businessObject).get('attributeItems');
   attributeItems.forEach((item, index) => addAttributeProps(group, businessObject, translate, item, index));
   group.entries.push(
     {
-      id: "uploadDiagram",
+      id: 'uploadDiagram',
       html: storeChor(),
-      modelProperty: "uploadDiagram",
-      execute: async function () {
+      modelProperty: 'uploadDiagram',
+      execute: async function() {
         buttonExecutePressedComposition(businessObject);
-         // buttonExecutePressedComposition(businessObject);
+        // buttonExecutePressedComposition(businessObject);
       }
     }
   );
@@ -106,13 +107,16 @@ function addParticipantProps(group, businessObject, translate) {
     label: translate('Select Participant'),
     selectOptions: () => getParticipantItems(businessObject),
     modelProperty: 'participantType',
-    set: function (element, values) {
+    set: function(element, values) {
       let props = {};
-      props['name']=values['participantType'].slice(0,4) || undefined;
+      if (!(element.businessObject.participantItems && element.businessObject.participantItems.length>0)) {
+        props['name']=values['participantType'].slice(0,4) || undefined;
+      }
+
       props['participantType'] = values['participantType'] || undefined;
       return cmdHelper.updateProperties(element, props);
     }
-    
+
   }));
 }
 
@@ -130,7 +134,7 @@ function hasMessageItems(businessObject) {
 function getParentChoreographyElement(businessObject) {
   return businessObject.$parent.get('rootElements').find(e => e.$type === 'bpmn:Choreography');
 }
-// TODO how to gate the value of the checkbox from the composition case 
+// TODO how to gate the value of the checkbox from the composition case
 function addAttributeProps(group, businessObject, translate, item, index) {
   const modelProperty = item.name;
   group.entries.push(entryFactory.checkbox(translate, {

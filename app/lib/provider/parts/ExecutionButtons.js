@@ -225,11 +225,14 @@ export async function buttonExecutePressedComposition(businessObject) {
     const gasPrice = await web3.eth.getGasPrice();
     const gasLimit = 3000000;
     let instance;
+    let choreographyId;
     if(businessObject.$parent.get('rootElements').find((e) => e.$type === 'bpmn:Choreography').$attrs.ChorInstanceId) {
         instance=businessObject.$parent.get('rootElements').find((e) => e.$type === 'bpmn:Choreography').$attrs.ChorInstanceId;
+        choreographyId=businessObject.$parent.get('rootElements').find((e) => e.$type === 'bpmn:Choreography').id;
     }else{
         instance='0';
     }
+    instance=choreographyId+'+'+instance;
     const hashInstance=web3.utils.padRight(web3.utils.asciiToHex(instance),64);
     if(tempActivity.outgoing && tempActivity.outgoing.length>0 && (tempActivity.outgoing[0].targetRef.$type.includes('Event') || tempActivity.outgoing[0].targetRef.$type.includes('Gateway'))) {
         genereteControlFlow(tempActivity.outgoing[0].targetRef,controlFlowElementList);
@@ -309,7 +312,7 @@ function genereteControlFlow(element, controlFlowElementList) {
         tipo: '',
         incomingActivity: [],
         outgoingActivity: [],
-        executed: false,
+        executed: element.di && element.di && element.di.fill==='lightgreen'?true:false,
     };
     const controlAsciiResult = web3.utils.asciiToHex(element.id);
     controlFlowElement.id = web3.utils.padRight(controlAsciiResult, 64);

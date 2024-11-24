@@ -34,15 +34,15 @@ export async function translateDiagram(modeler, contract) {
       console.log("subCho")
     }else if (elements[e].element.type.includes("bpmn:Choreography") && !elements[e].element.type.includes("bpmn:ChoreographyTask")){
       if(!elements[e].element.businessObject.$attrs.ChorInstanceId){
-        idInstance='0x3100000000000000000000000000000000000000000000000000000000000000';
+        idInstance=elements[e].element.id+'+'+1;
       }else{
-        idInstance=web3.utils.padRight(web3.utils.asciiToHex(elements[e].element.businessObject.$attrs.ChorInstanceId), 64);
+        idInstance=elements[e].element.id+'+'+elements[e].element.businessObject.$attrs.ChorInstanceId;
       }
       idChoreography=web3.utils.padRight(web3.utils.asciiToHex(elements[e].element.id), 64);
     }
   }
 
-
+  idInstance= idInstance=web3.utils.padRight(web3.utils.asciiToHex(idInstance), 64);
   console.log(activityList)
   console.log(messagges)
   console.log(participantList)

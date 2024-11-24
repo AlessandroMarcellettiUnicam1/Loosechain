@@ -21,14 +21,15 @@ async function getCurrentState(contract,modeler) {
     if (elements[e].element.id!='__implicitroot') {
       if (elements[e].element.type.includes('bpmn:Choreography') && !elements[e].element.type.includes('bpmn:ChoreographyTask')) {
         if (!elements[e].element.businessObject.$attrs) {
-          idInstance='0x3100000000000000000000000000000000000000000000000000000000000000';
+          idInstance=elements[e].element.businessObject.id+'+'+1;
         } else {
-          idInstance=web3.utils.padRight(web3.utils.asciiToHex(elements[e].element.businessObject.$attrs.ChorInstanceId), 64);
+          idInstance=elements[e].element.businessObject.id+'+'+elements[e].element.businessObject.$attrs.ChorInstanceId;
+         
         }
       }
     }
   }
-  // TODO get generica per istanza per colorare tutto di bianco
+  idInstance=web3.utils.padRight(web3.utils.asciiToHex(idInstance), 64);
   let result=[];
   for (const e in elements) {
     if (elements[e].element.id!='__implicitroot') {
@@ -42,7 +43,6 @@ async function getCurrentState(contract,modeler) {
       }
     }
   }
-
   return result;
   // return await contract.methods.getCurrentState().call();
 }
