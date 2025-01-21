@@ -22,7 +22,7 @@ import Web3 from 'web3';
 import { isInitiating } from 'chor-js/lib/util/BandUtil.js';
 
 const { ethereum } = window;
-export const accountAddress='0x6C7Cc868E8594Bc7069983A098F7b17AA3d03A71';
+export const accountAddress='0x837683436fa30Fe74070a6C1fd5122D9F39FBc89';
 const web3 = new Web3(ethereum);
 let lastFile;
 let isValidating = false;
