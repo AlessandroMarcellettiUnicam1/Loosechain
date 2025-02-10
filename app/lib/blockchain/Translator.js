@@ -43,12 +43,12 @@ export async function translateDiagram(modeler, contract) {
   }
 
   idInstance= idInstance=web3.utils.padRight(web3.utils.asciiToHex(idInstance), 64);
-  console.log(activityList)
-  console.log(messagges)
-  console.log(participantList)
-  console.log(messageAttributesList)
-  console.log(controlFlowElementList)
-  console.log(edgeConditionList)
+  console.log("activityList",activityList)
+  console.log("messagges",messagges)
+  console.log("participantList",participantList)
+  console.log("messageAttributesList",messageAttributesList)
+  console.log("controlFlowElementList",controlFlowElementList)
+  console.log("edgeConditionList",edgeConditionList)
   console.log(idChoreography)
   console.log(idInstance)
   // console.log(subChoreographyList)
@@ -56,7 +56,7 @@ export async function translateDiagram(modeler, contract) {
   //TODO metodo Web3 per leggere l'address direttamente 
   const gasPrice = await web3.eth.getGasPrice();
   const gasLimit = 6721975;
-  const gasEstimation = await contract.methods.setInformation(activityList, messagges, participantList, messageAttributesList, controlFlowElementList, edgeConditionList,idChoreography,idInstance).send({ from: accountAddress, gas: gasLimit, gasPrice: gasPrice })
+  const gasEstimation = await contract.methods.setChoreography(activityList, messagges, participantList, messageAttributesList, controlFlowElementList, edgeConditionList,idChoreography,idInstance).send({ from: accountAddress, gas: gasLimit, gasPrice: gasPrice })
 }
 
 
@@ -176,13 +176,19 @@ function createMessage(diagramElement, messagges, activityList, messageAttribute
     attributes: []
   }
   if (diagramElement.element.businessObject.get('messageItems').length > 0) {
-    let splitString = diagramElement.element.businessObject.get('messageItems')[0].name.split("(");
-    messageAttributeStruct.keyMapping = web3.utils.padRight(web3.utils.asciiToHex(splitString[0]), 64);
-    let splitCut = splitString[1].substring(0, splitString[1].length - 1).split(",");
-    splitCut.forEach((e) => {
-      messageAttributeStruct.attributes.push(web3.utils.padRight(web3.utils.asciiToHex(e), 64));
+    diagramElement.element.businessObject.get('messageItems').forEach((element) => {
+      let splitString = element.name.split("(");
+      console.log("splitString",splitString)
+      messageAttributeStruct.keyMapping = web3.utils.padRight(web3.utils.asciiToHex(splitString[0]), 64);
+      let splitCut = splitString[1].substring(0, splitString[1].length - 1).split(",");
+      console.log("splitCut",splitCut)
+      splitCut.forEach((e) => {
+        messageAttributeStruct.attributes.push(web3.utils.padRight(web3.utils.asciiToHex(e), 64));
+      })
+      
     })
     messageAttributesList.push(messageAttributeStruct);
+    
   } else {
     //we thought about a sigle key mapping for all attributes but we have multiple key mapping (one for each messages) 
     //for all the attributes 
@@ -207,7 +213,7 @@ function createGatewayElement(diagramElement, controlFlowElementList) {
   let typeList = ["bpmn:StartEvent", "bpmn:ExclusiveGateway", "bpmn:EndEvent", "bpmn:ParallelGateway", "bpmn:EventBasedGateway"]
   let controlFlowElement = {
     id: "",
-    elementType: "",
+    typeElement: "",
     incomingActivity: [],
     outgoingActivity: [],
     executed: false
@@ -240,27 +246,27 @@ function createGatewayElement(diagramElement, controlFlowElementList) {
     control.flowElements.incomingActivity.push(web3.utils.padRight(web3.utils.asciiToHex(diagramElement.element.businessObject.$parent.incoming[0].sourceRef.id), 64));
   }
   if (diagramElement.element.type.includes("bpmn:StartEvent")) {
-    controlFlowElement.elementType = "1"
+    controlFlowElement.typeElement = "1"
   } else if (diagramElement.element.type.includes("bpmn:ExclusiveGateway")) {
     if (controlFlowElement.incomingActivity.length == 1 && controlFlowElement.outgoingActivity.length > 1) {
-      controlFlowElement.elementType = "2"
+      controlFlowElement.typeElement = "2"
     } else if (controlFlowElement.incomingActivity.length > 1 && controlFlowElement.outgoingActivity.length == 1) {
-      controlFlowElement.elementType = "3"
+      controlFlowElement.typeElement = "3"
     } else {
-      controlFlowElement.elementType = "8"
+      controlFlowElement.typeElement = "8"
     }
   } else if (diagramElement.element.type.includes("bpmn:ParallelGateway")) {
     if (controlFlowElement.incomingActivity.length == 1 && controlFlowElement.outgoingActivity.length > 1) {
-      controlFlowElement.elementType = "4"
+      controlFlowElement.typeElement = "4"
     } else if (controlFlowElement.incomingActivity.length > 1 && controlFlowElement.outgoingActivity.length == 1) {
-      controlFlowElement.elementType = "5"
+      controlFlowElement.typeElement = "5"
     } else {
-      controlFlowElement.elementType = "8"
+      controlFlowElement.typeElement = "8"
     }
   } else if (diagramElement.element.type.includes("bpmn:EventBasedGateway")) {
-    controlFlowElement.elementType = "6"
+    controlFlowElement.typeElement = "6"
   } else if (diagramElement.element.type.includes("bpmn:EndEvent")) {
-    controlFlowElement.elementType = "7"
+    controlFlowElement.typeElement = "7"
   }
   controlFlowElementList.push(controlFlowElement);
 }

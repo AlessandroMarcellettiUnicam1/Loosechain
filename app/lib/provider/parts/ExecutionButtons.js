@@ -255,7 +255,7 @@ export async function buttonExecutePressedComposition(businessObject) {
 
 
     await contract.methods
-      .executeCompMessage(
+      .executeMessage(
             activity,
             message,
             controlFlowElementList,
@@ -309,7 +309,7 @@ function searchForNextActivities(
 function genereteControlFlow(element, controlFlowElementList) {
     let controlFlowElement = {
         id: '',
-        elementType: '',
+        typeElement: '',
         incomingActivity: [],
         outgoingActivity: [],
         executed: element.di && element.di && element.di.fill==='lightgreen'?true:false,
@@ -349,43 +349,43 @@ function genereteControlFlow(element, controlFlowElementList) {
         console.log('CASO DA FIXARE');
     }
     if (element.$type.includes('bpmn:StartEvent')) {
-        controlFlowElement.elementType = '1';
+        controlFlowElement.typeElement = '1';
     } else if (element.$type.includes('bpmn:ExclusiveGateway')) {
         if (
             controlFlowElement.incomingActivity.length == 1 &&
             controlFlowElement.outgoingActivity.length > 1
         ) {
-            controlFlowElement.elementType = '2';
+            controlFlowElement.typeElement = '2';
         } else if (
             controlFlowElement.incomingActivity.length > 1 &&
             controlFlowElement.outgoingActivity.length == 1
         ) {
-            controlFlowElement.elementType = '3';
+            controlFlowElement.typeElement = '3';
         } else {
-            controlFlowElement.elementType = '8';
+            controlFlowElement.typeElement = '8';
         }
     } else if (element.$type.includes('bpmn:ParallelGateway')) {
         if (
             controlFlowElement.incomingActivity.length == 1 &&
             controlFlowElement.outgoingActivity.length > 1
         ) {
-            controlFlowElement.elementType = '4';
+            controlFlowElement.typeElement = '4';
         } else if (
             controlFlowElement.incomingActivity.length > 1 &&
             controlFlowElement.outgoingActivity.length == 1
         ) {
-            controlFlowElement.elementType = '5';
+            controlFlowElement.typeElement = '5';
         } else {
-            controlFlowElement.elementType = '8';
+            controlFlowElement.typeElement = '8';
         }
     } else if (element.$type.includes('bpmn:EventBasedGateway')) {
-        controlFlowElement.elementType = '6';
+        controlFlowElement.typeElement = '6';
     } else if (element.$type.includes('bpmn:EndEvent')) {
-        controlFlowElement.elementType = '7';
+        controlFlowElement.typeElement = '7';
     }
     // I can save the control flow element only if it outgoing element because if i save the incoming i can have some problem
     // with the validation of the variables
-    if (controlFlowElement.elementType.includes('2')) {
+    if (controlFlowElement.typeElement.includes('2')) {
         element.outgoing.forEach((edge) => {
             let edgeCondition = {
                 attribute: '',
@@ -548,7 +548,7 @@ function createActivity(diagramElement, activityList, addressKeyMappingList, par
     let typeList = ['bpmn:StartEvent', 'bpmn:ExclusiveGateway', 'bpmn:EndEvent', 'bpmn:ParallelGateway', 'bpmn:EventBasedGateway'];
     let controlFlowElement = {
       id: '',
-      elementType: '',
+      typeElement: '',
       incomingActivity: [],
       outgoingActivity: [],
       executed: false
@@ -581,27 +581,27 @@ function createActivity(diagramElement, activityList, addressKeyMappingList, par
         controlFlowElement.incomingActivity.push(web3.utils.padRight(web3.utils.asciiToHex(diagramElement.element.businessObject.$parent.incoming[0].sourceRef.id), 64));
     }
     if (diagramElement.element.type.includes('bpmn:StartEvent')) {
-      controlFlowElement.elementType = '1';
+      controlFlowElement.typeElement = '1';
     } else if (diagramElement.element.type.includes('bpmn:ExclusiveGateway')) {
       if (controlFlowElement.incomingActivity.length == 1 && controlFlowElement.outgoingActivity.length > 1) {
-        controlFlowElement.elementType = '2';
+        controlFlowElement.typeElement = '2';
       } else if (controlFlowElement.incomingActivity.length > 1 && controlFlowElement.outgoingActivity.length == 1) {
-        controlFlowElement.elementType = '3';
+        controlFlowElement.typeElement = '3';
       } else {
-        controlFlowElement.elementType = '8';
+        controlFlowElement.typeElement = '8';
       }
     } else if (diagramElement.element.type.includes('bpmn:ParallelGateway')) {
       if (controlFlowElement.incomingActivity.length == 1 && controlFlowElement.outgoingActivity.length > 1) {
-        controlFlowElement.elementType = '4';
+        controlFlowElement.typeElement = '4';
       } else if (controlFlowElement.incomingActivity.length > 1 && controlFlowElement.outgoingActivity.length == 1) {
-        controlFlowElement.elementType = '5';
+        controlFlowElement.typeElement = '5';
       } else {
-        controlFlowElement.elementType = '8';
+        controlFlowElement.typeElement = '8';
       }
     } else if (diagramElement.element.type.includes('bpmn:EventBasedGateway')) {
-      controlFlowElement.elementType = '6';
+      controlFlowElement.typeElement = '6';
     } else if (diagramElement.element.type.includes('bpmn:EndEvent')) {
-      controlFlowElement.elementType = '7';
+      controlFlowElement.typeElement = '7';
     }
 
     controlFlowElementList.push(controlFlowElement);

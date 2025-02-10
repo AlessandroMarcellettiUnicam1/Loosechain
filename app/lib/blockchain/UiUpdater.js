@@ -35,11 +35,11 @@ async function getCurrentState(contract,modeler) {
     if (elements[e].element.id!='__implicitroot') {
       const asciiResult=web3.utils.asciiToHex(elements[e].element.id);
       if (elements[e].element.type.includes('Task')) {
-        result.push(await contract.methods.attivita(idInstance,web3.utils.padRight(asciiResult,64),1).call());
+        result.push(await contract.methods.getTask(idInstance,web3.utils.padRight(asciiResult,64),1).call());
       } else if (elements[e].element.type.includes('Message')) {
-        result.push(await contract.methods.messaggi(idInstance,web3.utils.padRight(asciiResult,64),1).call());
+        result.push(await contract.methods.getMessage(idInstance,web3.utils.padRight(asciiResult,64),1).call());
       } else if (elements[e].element.type.includes('Event') ||elements[e].element.type.includes('Gateway')) {
-        result.push(await contract.methods.controlFlowElementList(idInstance,web3.utils.padRight(asciiResult,64)).call());
+        result.push(await contract.methods.getControlFlowElement(idInstance,web3.utils.padRight(asciiResult,64)).call());
       }
     }
   }
