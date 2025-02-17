@@ -12,7 +12,7 @@
       "extends": [
         "bpmn:Choreography",
         "bpmn:Message",
-        "bpmn:Participant",
+        "bpmn:Participant"
       ],
       "properties": [
         {
@@ -43,6 +43,16 @@
       ]
     },
     {
+      "name": "InstanceValue",
+      "properties": [
+        {
+          "name": "name",
+          "isAttr": true,
+          "type": "String"
+        }
+      ]
+    },
+    {
       "name": "AttributeValue",
       "properties": [
         {
@@ -59,6 +69,16 @@
           "name": "name",
           "isAttr": true,
           "type": "String"
+        }
+      ]
+    },
+    {
+      "name":"ChorInstanceId",
+      "properties":[
+        {
+          "name":"name",
+          "isAttr":true,
+          "type":"String"
         }
       ]
     }
