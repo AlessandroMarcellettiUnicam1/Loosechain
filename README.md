@@ -22,7 +22,8 @@ You can install and run the demo locally using Node.js.
 delete the package-lock.json
 node version suggested 20^
 ```shell
-nvm install 20 
+nvm install 20
+nvm use 20
 npm install
 npm run dev
 ```
