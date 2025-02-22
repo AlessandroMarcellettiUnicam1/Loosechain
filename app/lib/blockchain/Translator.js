@@ -171,23 +171,29 @@ function createMessage(diagramElement, messagges, activityList, messageAttribute
     }
   })
   messagges.push(message);
-  let messageAttributeStruct = {
-    keyMapping: "",
-    attributes: []
-  }
+  
   if (diagramElement.element.businessObject.get('messageItems').length > 0) {
+    
+    console.log("messageItems",diagramElement.element.businessObject.get('messageItems'))
     diagramElement.element.businessObject.get('messageItems').forEach((element) => {
+      let messageAttributeStruct = {
+        keyMapping: "",
+        attributes: []
+      }
       let splitString = element.name.split("(");
-      console.log("splitString",splitString)
       messageAttributeStruct.keyMapping = web3.utils.padRight(web3.utils.asciiToHex(splitString[0]), 64);
       let splitCut = splitString[1].substring(0, splitString[1].length - 1).split(",");
-      console.log("splitCut",splitCut)
       splitCut.forEach((e) => {
         messageAttributeStruct.attributes.push(web3.utils.padRight(web3.utils.asciiToHex(e), 64));
       })
+
+      messageAttributesList.push(messageAttributeStruct);
       
+      // console.log("messageAttributeStruct",messageAttributeStruct)
+      // console.log("messageAttributesList",messageAttributesList)
+      // messageAttributesList.push(messageAttributeStruct);
     })
-    messageAttributesList.push(messageAttributeStruct);
+   
     
   } else {
     //we thought about a sigle key mapping for all attributes but we have multiple key mapping (one for each messages) 

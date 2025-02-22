@@ -11,7 +11,6 @@ var domify = require('min-dom').domify;
 
 export async function buttonExecutePressedComposition(businessObject) {
     const contract = await connectToBlockchain();
-    console.log(businessObject)
     let nextActivity = [];
     let newMessage = [];
     let tempActivity;
@@ -91,7 +90,6 @@ export async function buttonExecutePressedComposition(businessObject) {
         messageOut: '',
         tempState: false,
     };
-    console.log(tempActivity)
     const asciiResult = web3.utils.asciiToHex(tempActivity.id);
     activity.id = web3.utils.padRight(asciiResult, 64);
     activity.name = web3.utils.padRight(asciiResult, 64);
@@ -174,7 +172,6 @@ export async function buttonExecutePressedComposition(businessObject) {
     );
     let attributes;
     if (businessObject.get('messageItems').length > 0) {
-        console.log(businessObject);
         let splitString = businessObject.name.split('(');
         message.mappingKey = web3.utils.padRight(
             web3.utils.asciiToHex(splitString[0]),
@@ -240,6 +237,8 @@ export async function buttonExecutePressedComposition(businessObject) {
     if(tempActivity.incoming && tempActivity.incoming.length>0 && (tempActivity.incoming[0].sourceRef.$type.includes('Event') || tempActivity.incoming[0].sourceRef.$type.includes('Gateway'))) {
         genereteControlFlow(tempActivity.incoming[0].sourceRef,controlFlowElementList);
     }
+    console.log("diff",diff);
+
     console.log(
         activity,
         message,
@@ -282,7 +281,6 @@ function searchForNextActivities(
 ) {
     tempActivity.outgoing.forEach((element) => {
         if (element.targetRef.$type.includes('bpmn:ChoreographyTask')) {
-            console.log(element);
             if (!element.targetRef.di.fill) {
                 nextActivity.push(createActivity(element.targetRef));
                 createMessage(element.targetRef, newMessage);
@@ -293,7 +291,6 @@ function searchForNextActivities(
         ) {
             if (!element.targetRef.di.fill) {
                 genereteControlFlow(element.targetRef, controlFlowElementList);
-                console.log(element.targetRef);
                 if (!element.targetRef.$type.includes('bpmn:EndEvent')) {
                     searchForNextActivities(
                         element.targetRef,
@@ -321,7 +318,6 @@ function genereteControlFlow(element, controlFlowElementList) {
             controlFlowElement.outgoingActivity.push(
                 web3.utils.padRight(web3.utils.asciiToHex(ref.targetRef.id), 64)
             );
-            console.log(ref.targetRef);
             // if(ref.target.$type.includes("bpmn:ChoreographyTask")){
             //     nextActivity.push(createActivity(ref.target))
             // }else if(ref.targetRef.$type.includes("Event")|| ref.targetRef.$type.includes("Gateway")){
@@ -330,7 +326,6 @@ function genereteControlFlow(element, controlFlowElementList) {
         });
     } else {
         if (element.$parent.$type.includes('bpmn:SubChoreography')) {
-            console.log(element.$parent);
             controlFlowElement.outgoingActivity.push(
                 web3.utils.padRight(
                     web3.utils.asciiToHex(element.$parent.outgoing[0].targetRef.id),
@@ -346,7 +341,7 @@ function genereteControlFlow(element, controlFlowElementList) {
             );
         });
     } else {
-        console.log('CASO DA FIXARE');
+
     }
     if (element.$type.includes('bpmn:StartEvent')) {
         controlFlowElement.typeElement = '1';
@@ -443,7 +438,8 @@ function createDiff(businessObject) {
       createActivity(elements[e], activityList, addressKeyMappingList, participantList, keyMappingParticipants);
     } else if (elements[e].element.type.includes('Message') && !checkMessageColor(modeler.get('elementRegistry').getGraphics(elements[e].element.id).querySelector('g').children[1].style.fill)) {
       createMessage(elements[e], messagges, activityList, messageAttributesList);
-    } else if (!elements[e].element.businessObject && (elements[e].element.type.includes('Event') || elements[e].element.type.includes('Gateway'))) {
+    } else if (!elements[e].element.businessObject.di.fill && (elements[e].element.type.includes('Event') || elements[e].element.type.includes('Gateway'))) {
+        console.log(elements[e].element.businessObject)
       createGatewayElement(elements[e], controlFlowElementList);
     } else if (elements[e].element.type.includes('bpmn:SequenceFlow')) {
       createEdegeList(elements[e], edgeConditionList);
@@ -544,7 +540,7 @@ function createActivity(diagramElement, activityList, addressKeyMappingList, par
   }
 
   function createGatewayElement(diagramElement, controlFlowElementList) {
-    // console.log(diagramElement)
+    console.log("diagramEleemnt",diagramElement)
     let typeList = ['bpmn:StartEvent', 'bpmn:ExclusiveGateway', 'bpmn:EndEvent', 'bpmn:ParallelGateway', 'bpmn:EventBasedGateway'];
     let controlFlowElement = {
       id: '',
