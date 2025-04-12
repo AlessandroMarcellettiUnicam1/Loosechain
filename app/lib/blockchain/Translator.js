@@ -187,7 +187,9 @@ function createMessage(diagramElement, messagges, activityList, messageAttribute
         messageAttributeStruct.attributes.push(web3.utils.padRight(web3.utils.asciiToHex(e), 64));
       })
 
-      messageAttributesList.push(messageAttributeStruct);
+      if(!listIncludeMapping(messageAttributesList,messageAttributeStruct)){
+        messageAttributesList.push(messageAttributeStruct);
+      }
       
       // console.log("messageAttributeStruct",messageAttributeStruct)
       // console.log("messageAttributesList",messageAttributesList)
@@ -212,6 +214,15 @@ function createMessage(diagramElement, messagges, activityList, messageAttribute
       }
     }
   }
+}
+function listIncludeMapping(messageAttributesList,messageAttributeStruct){
+  let flag=false;
+  messageAttributesList.forEach((e)=>{
+    if(e.keyMapping.includes(messageAttributeStruct.keyMapping)){
+      flag=true;
+    }
+  })
+  return flag;
 }
 
 function createGatewayElement(diagramElement, controlFlowElementList) {

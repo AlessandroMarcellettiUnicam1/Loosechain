@@ -439,7 +439,6 @@ function createDiff(businessObject) {
     } else if (elements[e].element.type.includes('Message') && !checkMessageColor(modeler.get('elementRegistry').getGraphics(elements[e].element.id).querySelector('g').children[1].style.fill)) {
       createMessage(elements[e], messagges, activityList, messageAttributesList);
     } else if (!elements[e].element.businessObject.di.fill && (elements[e].element.type.includes('Event') || elements[e].element.type.includes('Gateway'))) {
-        console.log(elements[e].element.businessObject)
       createGatewayElement(elements[e], controlFlowElementList);
     } else if (elements[e].element.type.includes('bpmn:SequenceFlow')) {
       createEdegeList(elements[e], edgeConditionList);
