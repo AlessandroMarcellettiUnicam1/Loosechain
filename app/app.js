@@ -22,7 +22,7 @@ import Web3 from 'web3';
 import { isInitiating } from 'chor-js/lib/util/BandUtil.js';
 
 const { ethereum } = window;
-export const accountAddress='0x724AbF697C7fE3df26cd6a4f237977b66A29da16';
+export const accountAddress='0xEa89f523700e14c8F08e993ED1ED5Edf98DAF639';
 const web3 = new Web3(ethereum);
 let lastFile;
 let isValidating = false;
@@ -116,7 +116,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const rootElement=canva.getRootElement();
     const id= rootElement.id;
     const idBytes = web3.utils.padRight(web3.utils.asciiToHex(id), 64);
-    contract.methods.choInstanceListNumber(idBytes).call().then(result=>{
+    contract.methods.getChoreographyInstances(idBytes).call().then(result=>{
       const numberOfInstance=[];
       result.forEach(i => {
         numberOfInstance.push({ name: i, value: i });

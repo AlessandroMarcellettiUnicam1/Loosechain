@@ -921,12 +921,10 @@ export const contractAbi = [
 		"stateMutability": "nonpayable",
 		"type": "function"
 	}
-];
+]
 
-export const contractAddress = '0xB82f8429bb9ddDf4b6eb6Cabbf53889f4766FdDC';
-//0x6D478dA4710494eBe77e6f6B8960d42d64bF480d contratto nella testnet troppe transazioni inutili
-//0x52eF9e94fa6C767908c63db4dA99d536Ff64685D altro contratto non ci è stato eseguito niente
-//0x52A2791D1df55d5d3b17fa0615a199703657D1b8
-//0xFd58FB576bb17f4Ce0abD5486248B0bEC8eB252E
-//0x7c79F484f9f8693344E05db719D7CA3DE013e6eB ganache simulazione Selection
-//0xd19961640D14297434DB5B327BDc84850199Be1e ganache simulazione Composition
+export const contractAddress = '0xb4960b090B8c1DD3c6D21834880d9Bdec58eB5c2';
+//ganahce WORKSPACE CHEERFUL-SWING
+//contract memory 0x94425E85D9c4ca21fB6630DaCc5E3A07d27F5476
+//contract logic 0xb4960b090B8c1DD3c6D21834880d9Bdec58eB5c2
+

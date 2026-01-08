@@ -56,7 +56,15 @@ export async function translateDiagram(modeler, contract) {
   //TODO metodo Web3 per leggere l'address direttamente 
   const gasPrice = await web3.eth.getGasPrice();
   const gasLimit = 6721975;
-  const gasEstimation = await contract.methods.setChoreography(activityList, messagges, participantList, messageAttributesList, controlFlowElementList, edgeConditionList,idChoreography,idInstance).send({ from: accountAddress, gas: gasLimit, gasPrice: gasPrice })
+  console.log("Chain:", await web3.eth.getChainId());
+  const GANACHE_CHAIN_ID = '0x539'; // 1337
+
+await window.ethereum.request({
+  method: 'wallet_switchEthereumChain',
+  params: [{ chainId: GANACHE_CHAIN_ID }],
+});
+  //console.log(activityList, messagges, participantList, messageAttributesList, controlFlowElementList, edgeConditionList,idChoreography,idInstance)
+  const gasEstimation = await contract.methods.setChoreography(activityList, messagges, participantList, messageAttributesList, controlFlowElementList, edgeConditionList,idChoreography,idInstance).send({ from: accountAddress, gas: gasLimit, gasPrice: gasPrice, chain: 0x1691})
 }
 
 
@@ -230,7 +238,7 @@ function createGatewayElement(diagramElement, controlFlowElementList) {
   let typeList = ["bpmn:StartEvent", "bpmn:ExclusiveGateway", "bpmn:EndEvent", "bpmn:ParallelGateway", "bpmn:EventBasedGateway"]
   let controlFlowElement = {
     id: "",
-    typeElement: "",
+    elementType: "",
     incomingActivity: [],
     outgoingActivity: [],
     executed: false
@@ -263,27 +271,27 @@ function createGatewayElement(diagramElement, controlFlowElementList) {
     control.flowElements.incomingActivity.push(web3.utils.padRight(web3.utils.asciiToHex(diagramElement.element.businessObject.$parent.incoming[0].sourceRef.id), 64));
   }
   if (diagramElement.element.type.includes("bpmn:StartEvent")) {
-    controlFlowElement.typeElement = "1"
+    controlFlowElement.elementType = "1"
   } else if (diagramElement.element.type.includes("bpmn:ExclusiveGateway")) {
     if (controlFlowElement.incomingActivity.length == 1 && controlFlowElement.outgoingActivity.length > 1) {
-      controlFlowElement.typeElement = "2"
+      controlFlowElement.elementType = "2"
     } else if (controlFlowElement.incomingActivity.length > 1 && controlFlowElement.outgoingActivity.length == 1) {
-      controlFlowElement.typeElement = "3"
+      controlFlowElement.elementType = "3"
     } else {
-      controlFlowElement.typeElement = "8"
+      controlFlowElement.elementType = "8"
     }
   } else if (diagramElement.element.type.includes("bpmn:ParallelGateway")) {
     if (controlFlowElement.incomingActivity.length == 1 && controlFlowElement.outgoingActivity.length > 1) {
-      controlFlowElement.typeElement = "4"
+      controlFlowElement.elementType = "4"
     } else if (controlFlowElement.incomingActivity.length > 1 && controlFlowElement.outgoingActivity.length == 1) {
-      controlFlowElement.typeElement = "5"
+      controlFlowElement.elementType = "5"
     } else {
-      controlFlowElement.typeElement = "8"
+      controlFlowElement.elementType = "8"
     }
   } else if (diagramElement.element.type.includes("bpmn:EventBasedGateway")) {
-    controlFlowElement.typeElement = "6"
+    controlFlowElement.elementType = "6"
   } else if (diagramElement.element.type.includes("bpmn:EndEvent")) {
-    controlFlowElement.typeElement = "7"
+    controlFlowElement.elementType = "7"
   }
   controlFlowElementList.push(controlFlowElement);
 }

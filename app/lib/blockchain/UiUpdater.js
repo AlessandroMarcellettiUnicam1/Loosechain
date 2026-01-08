@@ -20,9 +20,12 @@ async function getCurrentState(contract,modeler) {
   for (const e in elements) {
     if (elements[e].element.id!='__implicitroot') {
       if (elements[e].element.type.includes('bpmn:Choreography') && !elements[e].element.type.includes('bpmn:ChoreographyTask')) {
+        console.log(elements[e].element.businessObject)
         if (!elements[e].element.businessObject.$attrs) {
+          console.log("case 1", elements[e].element.businessObject.id)
           idInstance=elements[e].element.businessObject.id+'+'+1;
         } else {
+          console.log("case 2", elements[e].element.businessObject.$attrs.ChorInstanceId, elements[e].element.businessObject.id)
           idInstance=elements[e].element.businessObject.id+'+'+elements[e].element.businessObject.$attrs.ChorInstanceId;
          
         }
@@ -30,15 +33,22 @@ async function getCurrentState(contract,modeler) {
     }
   }
   idInstance=web3.utils.padRight(web3.utils.asciiToHex(idInstance), 64);
+  console.log(idInstance)
   let result=[];
   for (const e in elements) {
     if (elements[e].element.id!='__implicitroot') {
       const asciiResult=web3.utils.asciiToHex(elements[e].element.id);
       if (elements[e].element.type.includes('Task')) {
+        //console.log("get task", idInstance,web3.utils.padRight(asciiResult,64))
+        //console.log(await contract.methods.getTask("0x0000000000000000000000000000000000000000000000000000000000000000","0x0000000000000000000000000000000000000000000000000000000000000000").call())
         result.push(await contract.methods.getTask(idInstance,web3.utils.padRight(asciiResult,64),1).call());
       } else if (elements[e].element.type.includes('Message')) {
+        //console.log("get message")
+        //console.log(await contract.methods.getMessage(idInstance,web3.utils.padRight(asciiResult,64),1).call())
         result.push(await contract.methods.getMessage(idInstance,web3.utils.padRight(asciiResult,64),1).call());
       } else if (elements[e].element.type.includes('Event') ||elements[e].element.type.includes('Gateway')) {
+        //console.log("get gateway")
+        //console.log(await contract.methods.getControlFlowElement(idInstance,web3.utils.padRight(asciiResult,64)).call())
         result.push(await contract.methods.getControlFlowElement(idInstance,web3.utils.padRight(asciiResult,64)).call());
       }
     }
