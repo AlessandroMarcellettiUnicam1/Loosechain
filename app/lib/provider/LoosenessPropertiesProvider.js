@@ -142,11 +142,11 @@ function storeChor() {
 async function tempFunction(element) {
   const id= element.id;
   const idBytes = web3.utils.padRight(web3.utils.asciiToHex(id), 64);
-  const instanceNumberId= await contract.methods.choInstanceListNumber(idBytes).call();
-  let numberOfInstance=[];
-  for (let i = 1; i <= instanceNumberId; i++) {
-    numberOfInstance.push({ name: i, value: i });
-  }
+  const instanceNumberId= await contract.methods.getChoreographyInstances(idBytes).call();
+   let numberOfInstance=result;
+      /*result.forEach(i => {
+        numberOfInstance.push({ name: i, value: i });
+      });*/
 
   const options = numberOfInstance.map(instance => `<option value="${instance.value}">${instance.name}</option>`).join('');
 }

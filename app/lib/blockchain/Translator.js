@@ -1,5 +1,6 @@
 import connectToBlockchain from './connection';
-import { accountAddress } from '../../app';
+import getAccount from './connection'
+//import { accountAddress } from '../../app';
 import Web3 from 'web3';
 const { ethereum } = window;
 const web3 = new Web3(ethereum);
@@ -64,6 +65,9 @@ await window.ethereum.request({
   params: [{ chainId: GANACHE_CHAIN_ID }],
 });
   //console.log(activityList, messagges, participantList, messageAttributesList, controlFlowElementList, edgeConditionList,idChoreography,idInstance)
+  const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+  console.log(accounts)
+  let accountAddress = accounts[0];
   const gasEstimation = await contract.methods.setChoreography(activityList, messagges, participantList, messageAttributesList, controlFlowElementList, edgeConditionList,idChoreography,idInstance).send({ from: accountAddress, gas: gasLimit, gasPrice: gasPrice, chain: 0x1691})
 }
 

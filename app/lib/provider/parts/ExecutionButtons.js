@@ -1,9 +1,10 @@
 /* eslint-disable keyword-spacing */
 /* eslint-disable indent */
 import connectToBlockchain from '../../blockchain/connection';
+import getAccount from '../../blockchain/connection';
 import Web3 from 'web3';
 import { modeler } from '../../../app';
-import {accountAddress} from '../../../app';
+//import {accountAddress} from '../../../app';
 const { ethereum } = window;
 const web3 = new Web3(ethereum);
 var domify = require('min-dom').domify;
@@ -252,7 +253,9 @@ export async function buttonExecutePressedComposition(businessObject) {
         hashInstance
     );
 
-
+    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+  console.log(accounts)
+  let accountAddress = accounts[0];
     await contract.methods
       .executeMessage(
             activity,

@@ -17,6 +17,24 @@ export default async function connectToBlockchain() {
   return new web3.eth.Contract(contractAbi, contractAddress);
 }
 
+// utils.js
+export async function getAccount() {
+  if (window.ethereum) {
+    try {
+      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+      console.log(accounts[0])
+      return accounts[0];
+    } catch (err) {
+      console.error("User denied account access", err);
+      return null;
+    }
+  } else {
+    console.error("MetaMask not installed");
+    return null;
+  }
+}
+
+
 /**
  * Request account access from the user. If MetaMask is not installed, an alert is shown.
  *
