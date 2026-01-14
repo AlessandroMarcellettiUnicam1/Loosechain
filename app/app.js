@@ -10,7 +10,8 @@ import { updateParticipantBandKinds } from 'chor-js/lib/features/modeling/cmd/Ch
 import BpmnPropertiesProvider from 'bpmn-js-properties-panel/lib/provider/bpmn/BpmnPropertiesProvider';
 import cmdHelper from 'bpmn-js-properties-panel/lib/helper/CmdHelper';
 import { is } from 'bpmn-js/lib/util/ModelUtil';
-import xml from './diagrams/CompositionCaseSim.bpmn';
+//import xml from './diagrams/CompositionCaseSim.bpmn';
+import xml from './diagrams/newDiagram.bpmn';
 import blankXml from './diagrams/newDiagram.bpmn';
 
 import connectToBlockchain from './lib/blockchain/connection';
@@ -119,10 +120,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     const id= rootElement.id;
     const idBytes = web3.utils.padRight(web3.utils.asciiToHex(id), 64);
     contract.methods.getChoreographyInstances(idBytes).call().then(result=>{
-      const numberOfInstance=[];
-      result.forEach(i => {
-        numberOfInstance.push({ name: i, value: i });
-      });
+      console.log(result)
+      
+      const normalNumber = Number(result);
+      console.log(normalNumber)
+      let numberOfInstance=[];
+      for (let i = 1; i <= normalNumber; i++) {
+        numberOfInstance.push({ name: web3.utils.asciiToHex(id), value: i.toString() });
+      }
+
+      console.log(numberOfInstance)
+      
+      //result.forEach(i => {
+        
+      //});
 
       modeler.get('eventBus').fire('element.changed', {
         element: rootElement,
@@ -307,7 +318,8 @@ modeler.get('eventBus').on('element.changed', function(event) {
     });
   }
   if (event.numberOfInstance) {
-    document.getElementById('camunda-instanceNumberId-select').innerHTML = event.numberOfInstance.map(instance => `<option value="${cleanData(instance.value)}">${cleanData(instance.name)}</option>`).join('');
+    console.log(event.numberOfInstance)
+    document.getElementById('camunda-instanceNumberId-select').innerHTML = event.numberOfInstance.map(instance => `<option value="${instance.value}"> ${cleanData(instance.name)} [${instance.value}]</option>`).join('');
   }
 });
 function cleanData(bytes32) {

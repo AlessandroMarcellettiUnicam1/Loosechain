@@ -98,7 +98,7 @@ function createChoreographyGroups(element, bpmnFactory, translate) {
     label: 'Instance Id',
     businessObjectProperty: 'ChorInstanceId',
   });
-  let instanceOptions = [ { name: 'Select instance number', value: '1' }];
+  let instanceOptions = [ { name: 'Select instance number', value: '' }];
   choreographyGroup.entries.push(selectBox(translate, {
     id: 'instanceNumberId',
     label: translate('Select Instance Number'),

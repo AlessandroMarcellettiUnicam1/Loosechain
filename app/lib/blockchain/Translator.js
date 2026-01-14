@@ -56,7 +56,7 @@ export async function translateDiagram(modeler, contract) {
   
   //TODO metodo Web3 per leggere l'address direttamente 
   const gasPrice = await web3.eth.getGasPrice();
-  const gasLimit = 6721975;
+  const gasLimit = 30000000;
   console.log("Chain:", await web3.eth.getChainId());
   const GANACHE_CHAIN_ID = '0x539'; // 1337
 
