@@ -14,6 +14,17 @@
 
 You can install and run the demo locally using Node.js.
 
+### 🛠 Setup Steps
+
+1. ** Deploy Smart Contracts**  
+   Deploy the following contracts located in the `app/contracts` folder on your target blockchain:
+
+   - `contractMemory.sol`  
+   - `contractLogic.sol`  
+
+2. ** Configure Contract Address**  
+   Replace the value of the `contractAddress` variable in `app/blockchain/Contract.js` with the address of the deployed **contractLogic** smart contract.
+
 
 #### Run Only
 delete the package-lock.json

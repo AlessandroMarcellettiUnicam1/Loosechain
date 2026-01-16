@@ -924,7 +924,5 @@ export const contractAbi = [
 ]
 
 export const contractAddress = '0xfAf38A85818276a02f062E5bE1f1954d5F7E19ee';
-//ganahce WORKSPACE CHEERFUL-SWING
-//contract memory 0x94425E85D9c4ca21fB6630DaCc5E3A07d27F5476
-//contract logic 0xb4960b090B8c1DD3c6D21834880d9Bdec58eB5c2
+
 
