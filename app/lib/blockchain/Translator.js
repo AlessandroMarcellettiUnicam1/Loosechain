@@ -1,12 +1,12 @@
-import connectToBlockchain from './connection';
-import getAccount from './connection'
 //import { accountAddress } from '../../app';
 import Web3 from 'web3';
-const { ethereum } = window;
-const web3 = new Web3(ethereum);
+import { blockchainChainId, blockchainRpcUrl, blockchainTarget } from './Contract';
+import { getAccount, getBlockchainWeb3 } from './Connection';
 
 let isDirty = false;
+let web3;
 export async function translateDiagram(modeler, contract) {
+  web3 = getBlockchainWeb3();
   // const contract = await connectToBlockchain();
   const elements = modeler.get('elementRegistry')["_elements"];
   let activityList = [];
@@ -54,21 +54,102 @@ export async function translateDiagram(modeler, contract) {
   console.log(idInstance)
   // console.log(subChoreographyList)
   
-  //TODO metodo Web3 per leggere l'address direttamente 
-  const gasPrice = await web3.eth.getGasPrice();
-  const gasLimit = 30000000;
-  console.log("Chain:", await web3.eth.getChainId());
-  const GANACHE_CHAIN_ID = '0x539'; // 1337
+  const readWeb3 = blockchainRpcUrl ? new Web3(blockchainRpcUrl) : web3;
+  const readContract = blockchainRpcUrl
+    ? new readWeb3.eth.Contract(contract.options.jsonInterface, contract.options.address)
+    : contract;
+  let deploymentChainId;
+  try {
+    deploymentChainId = Number(await readWeb3.eth.getChainId());
+  } catch (error) {
+    throw new Error(`Could not reach the configured blockchain RPC at ${blockchainRpcUrl || 'the MetaMask endpoint'}: ${error.message}`);
+  }
 
-await window.ethereum.request({
-  method: 'wallet_switchEthereumChain',
-  params: [{ chainId: GANACHE_CHAIN_ID }],
-});
-  //console.log(activityList, messagges, participantList, messageAttributesList, controlFlowElementList, edgeConditionList,idChoreography,idInstance)
-  const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-  console.log(accounts)
-  let accountAddress = accounts[0];
-  const gasEstimation = await contract.methods.setChoreography(activityList, messagges, participantList, messageAttributesList, controlFlowElementList, edgeConditionList,idChoreography,idInstance).send({ from: accountAddress, gas: gasLimit, gasPrice: gasPrice, chain: 0x1691})
+  if (deploymentChainId !== blockchainChainId) {
+    throw new Error(`The blockchain RPC is on chain ${deploymentChainId}, but the deployed contract config requires chain ${blockchainChainId}.`);
+  }
+
+  if (blockchainTarget !== 'local') {
+    try {
+      await window.ethereum.request({
+        method: 'wallet_switchEthereumChain',
+        params: [{ chainId: `0x${blockchainChainId.toString(16)}` }]
+      });
+    } catch (error) {
+      if (error.code === 4902) {
+        throw new Error(`Add the configured ${blockchainTarget} network (chain ID ${blockchainChainId}) to MetaMask before uploading.`);
+      }
+      throw error;
+    }
+
+    let walletChainId;
+    try {
+      walletChainId = Number(await window.ethereum.request({ method: 'eth_chainId' }));
+    } catch (error) {
+      throw new Error(`Could not read the chain ID from MetaMask: ${error.message}. Check that MetaMask uses a healthy RPC endpoint.`);
+    }
+    if (walletChainId !== blockchainChainId) {
+      throw new Error(`MetaMask is connected to chain ${walletChainId}, but this deployment requires chain ${blockchainChainId}.`);
+    }
+  }
+
+  let contractCode;
+  try {
+    contractCode = await readWeb3.eth.getCode(contract.options.address);
+  } catch (error) {
+    throw new Error(`Could not verify contract ${contract.options.address} using the configured RPC: ${error.message}`);
+  }
+  if (!contractCode || contractCode === '0x') {
+    const localRpcTip = blockchainTarget === 'local'
+      ? 'Check that the local Hardhat node is running and the app was rebuilt after deployment.'
+      : 'Check that the contract was deployed to this network.';
+    throw new Error(`No contract code found at ${contract.options.address} on chain ${deploymentChainId}. ${localRpcTip}`);
+  }
+
+  const accountAddress = await getAccount();
+
+  const submitContract = blockchainTarget === 'local' ? readContract : contract;
+  if (blockchainTarget === 'local') {
+    const unlockedAccounts = await readWeb3.eth.getAccounts();
+    if (!unlockedAccounts.some(account => account.toLowerCase() === accountAddress.toLowerCase())) {
+      throw new Error('The selected MetaMask account is not unlocked in the local Hardhat node. Import one of Hardhat\'s funded test accounts (for example the first account listed in the blockchain logs) into MetaMask.');
+    }
+  }
+
+  const transactionArguments = [
+    activityList,
+    messagges,
+    participantList,
+    messageAttributesList,
+    controlFlowElementList,
+    edgeConditionList,
+    idChoreography,
+    idInstance
+  ];
+  const readTransaction = readContract.methods.setChoreography(...transactionArguments);
+  const transaction = submitContract.methods.setChoreography(...transactionArguments);
+  let estimatedGas;
+  try {
+    estimatedGas = BigInt(await readTransaction.estimateGas({ from: accountAddress }));
+  } catch (error) {
+    throw new Error(`The configured RPC could not estimate the contract upload on chain ${deploymentChainId}: ${error.message}. Check that the BPMN data is valid for this contract.`);
+  }
+  const block = await readWeb3.eth.getBlock('latest');
+  const blockGasLimit = BigInt(block.gasLimit);
+  if (estimatedGas > blockGasLimit) {
+    throw new Error(`The upload requires ${estimatedGas} gas, exceeding this network's ${blockGasLimit} gas block limit.`);
+  }
+
+  const gasWithBuffer = estimatedGas + estimatedGas / 5n;
+  const gasLimit = gasWithBuffer < blockGasLimit ? gasWithBuffer : blockGasLimit;
+  try {
+    if (blockchainTarget === 'local') {
+      console.info('Sending transaction directly to the local Hardhat node using the selected unlocked test account.');
+    }
+    return await transaction.send({ from: accountAddress, gas: gasLimit });
+  } catch (error) {
+    throw new Error(`Could not submit the upload transaction on chain ${deploymentChainId}: ${error.message}`);
+  }
 }
 
 

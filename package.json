@@ -6,7 +6,10 @@
   "scripts": {
     "lint": "eslint .",
     "build": "parcel build app/index.html -d build --public-url ./",
-    "dev": "parcel app/index.html -p 9013"
+    "dev": "parcel app/index.html -p 9013",
+    "blockchain:node": "hardhat node --hostname 0.0.0.0",
+    "blockchain:deploy": "hardhat run scripts/deploy.js --network docker",
+    "docker:start": "node scripts/docker-start.js"
   },
   "keywords": [
     "choreography-modeler"
@@ -33,8 +36,11 @@
   ],
   "devDependencies": {
     "@babel/core": "^7.18.6",
+    "@nomicfoundation/hardhat-ethers": "^3.0.8",
     "eslint": "^4.19.1",
     "eslint-plugin-bpmn-io": "^0.7.0",
+    "ethers": "^6.12.0",
+    "hardhat": "^2.22.17",
     "less": "^3.11.1",
     "parcel-bundler": "^1.12.4",
     "parcel-plugin-stringify-anything": "^1.2.0"

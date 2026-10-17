@@ -1,13 +1,12 @@
 import { is, getBusinessObject } from 'bpmn-js/lib/util/ModelUtil';
 import entryFactory from 'bpmn-js-properties-panel/lib/factory/EntryFactory';
-import connectToBlockchain from '../../blockchain/connection';
+import connectToBlockchain from '../../blockchain/Connection';
 import cmdHelper from 'bpmn-js-properties-panel/lib/helper/CmdHelper';
-import { buttonExecutePressedSelection, buttonExecutePressedComposition, uploadDiff } from './ExecutionButtons';
+import { buttonExecutePressedComposition } from './ExecutionButtons';
 import { addCustomLabel } from './helper/TableDefinitionHelper';
 import { modeler } from '../../../app';
-import Web3 from 'web3';
-const { ethereum } = window;
-const web3 = new Web3(ethereum);
+import updateUI from '../../blockchain/UiUpdater';
+import notify from '../../notifications';
 var domify = require('min-dom').domify;
 /**
  * Adds execution properties to the properties panel group based on the type of BPMN element.
@@ -49,7 +48,7 @@ function storeChor() {
   return domify('<div class="bpp-field-wrapper" style="flex-direction:column;">' +
     '<div class="bpp-properties-entry" ' + 'data-show="show"' + ' >' +
     '</div>' +
-    '<button type="button"  class="btn btn-outline-primary" data-action="execute" ><span>Execute </span></button>' +
+    '<button type="button"  class="btn btn-outline-primary" data-action="execute" ><span>Execute message</span></button>' +
     '<p>' + '' + '</p>' +
     '</div>');
 }
@@ -81,8 +80,20 @@ function addMessageProps(group, businessObject, translate,element,bpmnFactory) {
       html: storeChor(),
       modelProperty: 'uploadDiagram',
       execute: async function() {
-        buttonExecutePressedComposition(businessObject);
-        // buttonExecutePressedComposition(businessObject);
+        try {
+          const receipt = await buttonExecutePressedComposition(businessObject);
+          const transactionHash = receipt.transactionHash || receipt.hash || 'unavailable';
+          notify(`Message executed successfully in block ${receipt.blockNumber}; transaction ${transactionHash}.`, 'success');
+          try {
+            await updateUI(await connectToBlockchain(), modeler);
+          } catch (error) {
+            console.error('Message execution succeeded, but the diagram status could not be refreshed.', error);
+            notify(`Message executed, but the diagram status could not be refreshed: ${error.message}`, 'error');
+          }
+        } catch (error) {
+          console.error('Could not execute the selected message.', error);
+          notify(`Could not execute the selected message: ${error.message}`, 'error');
+        }
       }
     }
   );

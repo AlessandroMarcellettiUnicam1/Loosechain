@@ -1,56 +1,73 @@
 import Web3 from 'web3';
-import { contractAbi, contractAddress } from './contract';
+import {
+  blockchainRpcUrl,
+  blockchainTarget,
+  blockchainChainId,
+  contractAbi,
+  contractAddress
+} from './Contract';
 
-/**
- * Connect to the blockchain. If MetaMask is not installed, an alert is shown. If MetaMask is installed, a new Web3
- * instance is created, the user is prompted to grant account access, and a new contract instance is returned.
- *
- * @returns {Promise<Web3.eth.Contract>|undefined} A new contract instance or undefined if MetaMask is not installed or
- * access is denied.
- */
-export default async function connectToBlockchain() {
-  const { ethereum } = window;
-  const accountGranted = await requestAccount(ethereum);
-  if (!accountGranted) return;
+let web3;
+let contractPromise;
 
-  const web3 = new Web3(ethereum);
-  return new web3.eth.Contract(contractAbi, contractAddress);
-}
+export function getBlockchainWeb3() {
+  if (web3) {
+    return web3;
+  }
 
-// utils.js
-export async function getAccount() {
-  if (window.ethereum) {
-    try {
-      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-      console.log(accounts[0])
-      return accounts[0];
-    } catch (err) {
-      console.error("User denied account access", err);
-      return null;
-    }
+  if (blockchainTarget === 'local') {
+    web3 = new Web3(blockchainRpcUrl || 'http://127.0.0.1:8545');
+  } else if (window.ethereum) {
+    web3 = new Web3(window.ethereum);
   } else {
-    console.error("MetaMask not installed");
-    return null;
+    throw new Error('Install or enable MetaMask to connect to the configured public blockchain.');
   }
+
+  return web3;
 }
 
+export default async function connectToBlockchain() {
+  if (!contractPromise) {
+    contractPromise = (async () => {
+      const providerWeb3 = getBlockchainWeb3();
+      const connectedChainId = Number(await providerWeb3.eth.getChainId());
+      if (connectedChainId !== blockchainChainId) {
+        throw new Error(`Configured contract is for chain ${blockchainChainId}, but the connected blockchain is chain ${connectedChainId}.`);
+      }
 
-/**
- * Request account access from the user. If MetaMask is not installed, an alert is shown.
- *
- * @param {Object} ethereum - The ethereum object injected by MetaMask.
- * @returns {Promise<boolean>} A promise that resolves to true if account access is granted, otherwise false.
- */
-async function requestAccount(ethereum) {
-  if (!ethereum) {
-    alert('If you want to interact with the blockchain, please install MetaMask.');
-    return false;
+      const contract = new providerWeb3.eth.Contract(contractAbi, contractAddress);
+      const code = await providerWeb3.eth.getCode(contractAddress);
+      if (!code || code === '0x') {
+        throw new Error(`No smart contract was found at ${contractAddress} on chain ${connectedChainId}. Deploy the contracts and restart the app.`);
+      }
+      return contract;
+    })().catch(error => {
+      contractPromise = undefined;
+      throw error;
+    });
   }
-  try {
-    await ethereum.request({ method: 'eth_requestAccounts' });
-    return true;
-  } catch (error) {
-    console.error('User denied account access or there was an error connecting to MetaMask', error);
-    return false;
+
+  return contractPromise;
+}
+
+export async function getAccount() {
+  if (!window.ethereum) {
+    throw new Error('Install or enable MetaMask to submit a public-network transaction.');
   }
+
+  const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+  if (!accounts[0]) {
+    throw new Error('MetaMask did not provide an account.');
+  }
+  return accounts[0];
+}
+
+export async function getChoreographyInstanceCount(contract, choreographyId) {
+  const providerWeb3 = getBlockchainWeb3();
+  const choreographyIdBytes = providerWeb3.utils.padRight(
+    providerWeb3.utils.asciiToHex(choreographyId),
+    64
+  );
+  const result = await contract.methods.getChoreographyInstances(choreographyIdBytes).call();
+  return Number(result);
 }

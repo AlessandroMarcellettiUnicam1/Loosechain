@@ -1,4 +1,4 @@
-import updateUI from './uiUpdater';
+import updateUI from './UiUpdater';
 
 /**
  * Sets up event listeners for the given contract. When the functionDone event is emitted, the UI is updated.

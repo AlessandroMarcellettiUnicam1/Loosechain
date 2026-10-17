@@ -1,12 +1,12 @@
 /* eslint-disable keyword-spacing */
 /* eslint-disable indent */
-import connectToBlockchain from '../../blockchain/connection';
-import getAccount from '../../blockchain/connection';
+import connectToBlockchain, { getAccount } from '../../blockchain/Connection';
+import { blockchainRpcUrl, blockchainTarget } from '../../blockchain/Contract';
 import Web3 from 'web3';
 import { modeler } from '../../../app';
-//import {accountAddress} from '../../../app';
-const { ethereum } = window;
-const web3 = new Web3(ethereum);
+const web3 = new Web3(blockchainTarget === 'local'
+    ? blockchainRpcUrl || 'http://127.0.0.1:8545'
+    : window.ethereum);
 var domify = require('min-dom').domify;
 
 
@@ -253,10 +253,8 @@ export async function buttonExecutePressedComposition(businessObject) {
         hashInstance
     );
 
-    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-  console.log(accounts)
-  let accountAddress = accounts[0];
-    await contract.methods
+    const accountAddress = await getAccount();
+    return await contract.methods
       .executeMessage(
             activity,
             message,
@@ -274,7 +272,6 @@ export async function buttonExecutePressedComposition(businessObject) {
             gas: gasLimit,
             gasPrice: gasPrice,
         });
-       return true;
 }
 function searchForNextActivities(
     tempActivity,

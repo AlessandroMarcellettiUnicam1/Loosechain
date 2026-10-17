@@ -14,23 +14,42 @@ import { is } from 'bpmn-js/lib/util/ModelUtil';
 import xml from './diagrams/newDiagram.bpmn';
 import blankXml from './diagrams/newDiagram.bpmn';
 
-import connectToBlockchain from './lib/blockchain/connection';
+import connectToBlockchain from './lib/blockchain/Connection';
 import { translateDiagram } from './lib/blockchain/Translator.js';
-import setupEventListeners from './lib/blockchain/events';
-import updateUI from './lib/blockchain/uiUpdater';
-
-import Web3 from 'web3';
+import updateUI from './lib/blockchain/UiUpdater';
+import { getDiagram, getDiagrams, saveDiagram } from './lib/diagram-storage';
+import { blockchainChainId, blockchainTarget } from './lib/blockchain/Contract';
+import { refreshInstanceOptions } from './lib/blockchain/InstanceNumbers';
 import { isInitiating } from 'chor-js/lib/util/BandUtil.js';
-
-const { ethereum } = window;
-//export const accountAddress='0xEa89f523700e14c8F08e993ED1ED5Edf98DAF639';
-const web3 = new Web3(ethereum);
-
 
 let lastFile;
 let isValidating = false;
 let isDirty = false;
-let numberOfInstance;
+let contract;
+let notificationTimeout;
+
+function showNotification(message, type = 'info') {
+  const notification = document.getElementById('app-notification');
+  const notificationMessage = document.getElementById('app-notification-message');
+  if (!notification || !notificationMessage) {
+    return;
+  }
+  notificationMessage.textContent = message;
+  notification.className = `app-notification ${type}`;
+  notification.hidden = false;
+  window.clearTimeout(notificationTimeout);
+  notificationTimeout = window.setTimeout(() => {
+    notification.hidden = true;
+  }, type === 'success' ? 12000 : 10000);
+}
+
+window.addEventListener('loosechain:notification', event => {
+  showNotification(event.detail.message, event.detail.type);
+});
+document.getElementById('app-notification-close').addEventListener('click', () => {
+  document.getElementById('app-notification').hidden = true;
+  window.clearTimeout(notificationTimeout);
+});
 // create and configure a chor-js instance
 export const modeler = new ChorJSModeler({
   container: '#canvas',
@@ -51,14 +70,7 @@ export const modeler = new ChorJSModeler({
 
 // display the given model (XML representation)
 async function renderModel(newXml) {
-
-  // console.log(numberOfInstance)
-
-  if (window.localStorage.getItem('xml')) {
-    await modeler.importXML(window.localStorage.getItem('xml'));
-  } else {
-    await modeler.importXML(newXml);
-  }
+  await modeler.importXML(newXml);
   // const canva=modeler.get('canvas');
   // const rootElement=canva.getRootElement();
   // console.log(rootElement);
@@ -78,15 +90,16 @@ function diagramName() {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-  // initialize the blockchain connection and set up event listeners
-  const contract = await connectToBlockchain();
-
-  if (contract) {
-    setupEventListeners(contract, modeler);
-    await updateUI(contract, modeler);
-
+  const legacyDraft = window.localStorage.getItem('xml');
+  try {
+    await renderModel(legacyDraft || xml);
+    if (legacyDraft) {
+      window.localStorage.removeItem('xml');
+    }
+  } catch (error) {
+    console.error('Could not load the BPMN diagram.', error);
+    showNotification(`Could not load the BPMN diagram: ${error.message}`, 'error');
   }
-
 
   // download diagram as XML
   const downloadLink = document.getElementById('js-download-diagram');
@@ -108,49 +121,70 @@ document.addEventListener('DOMContentLoaded', async () => {
   // open file dialog
   document.getElementById('js-open-file').addEventListener('click', e => {
     document.getElementById('file-input').click();
-    localStorage.clear();
   });
 
+  const savedDiagrams = document.getElementById('js-saved-diagrams');
+  let activeSavedDiagramId = '';
+  const refreshSavedDiagrams = async selectedId => {
+    const diagrams = await getDiagrams();
+    savedDiagrams.innerHTML = '';
 
+    const placeholder = document.createElement('option');
+    placeholder.value = '';
+    placeholder.textContent = diagrams.length ? 'Select saved diagram' : 'No saved diagrams';
+    savedDiagrams.appendChild(placeholder);
 
-
-  document.querySelector('[data-entry="instanceNumberId"]').addEventListener('click', e => {
-    const canva=modeler.get('canvas');
-    const rootElement=canva.getRootElement();
-    const id= rootElement.id;
-    const idBytes = web3.utils.padRight(web3.utils.asciiToHex(id), 64);
-    contract.methods.getChoreographyInstances(idBytes).call().then(result=>{
-      console.log(result)
-      
-      const normalNumber = Number(result);
-      console.log(normalNumber)
-      let numberOfInstance=[];
-      for (let i = 1; i <= normalNumber; i++) {
-        numberOfInstance.push({ name: web3.utils.asciiToHex(id), value: i.toString() });
-      }
-
-      console.log(numberOfInstance)
-      
-      //result.forEach(i => {
-        
-      //});
-
-      modeler.get('eventBus').fire('element.changed', {
-        element: rootElement,
-        numberOfInstance: numberOfInstance
-      });
+    diagrams.forEach(diagram => {
+      const option = document.createElement('option');
+      option.value = diagram.id;
+      option.textContent = `${diagram.name} (${new Date(diagram.updatedAt).toLocaleString()})`;
+      savedDiagrams.appendChild(option);
     });
-  });
-  // contract.methods.choInstanceListNumber(idBytes).call().then(instanceNumberId => {
-  //   for (let i = 0; i <= Number(instanceNumberId); i++) {
-  //     numberOfInstance.push({ name: i, value: i });
-  //   }
 
-  //   modeler.get('eventBus').fire('element.changed', {
-  //     element: rootElement,
-  //     numberOfInstance: numberOfInstance
-  // });
-  // });
+    if (selectedId !== undefined) {
+      savedDiagrams.value = String(selectedId);
+    }
+  };
+
+  try {
+    await refreshSavedDiagrams();
+  } catch (error) {
+    console.error('Could not load locally saved diagrams.', error);
+    window.alert(`Could not load locally saved diagrams: ${error.message}`);
+  }
+
+  savedDiagrams.addEventListener('change', async () => {
+    const selectedId = savedDiagrams.value;
+    if (!selectedId) {
+      activeSavedDiagramId = '';
+      return;
+    }
+
+    if (isDirty && !window.confirm('Loading this saved diagram will discard unsaved changes. Continue?')) {
+      savedDiagrams.value = activeSavedDiagramId;
+      return;
+    }
+
+    savedDiagrams.disabled = true;
+    try {
+      const diagram = await getDiagram(Number(selectedId));
+      if (!diagram) {
+        throw new Error('The selected saved diagram could not be found.');
+      }
+      await renderModel(diagram.xml);
+      lastFile = { name: diagram.name };
+      activeSavedDiagramId = selectedId;
+    } catch (error) {
+      savedDiagrams.value = activeSavedDiagramId;
+      console.error('Could not load the selected BPMN diagram.', error);
+      window.alert(`Could not load the selected BPMN diagram: ${error.message}`);
+    } finally {
+      savedDiagrams.disabled = false;
+    }
+  });
+
+
+
 
   // toggle side panels
   const panels = Array.prototype.slice.call(
@@ -173,14 +207,55 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   // upload information into contract
-  document.getElementById('js-smart-contract').addEventListener('click',async () =>{
-    translateDiagram(modeler,contract);
+  const uploadButton = document.getElementById('js-smart-contract');
+  uploadButton.addEventListener('click', async () => {
+    uploadButton.disabled = true;
+    try {
+      contract = contract || await connectToBlockchain();
+      const receipt = await translateDiagram(modeler, contract);
+      const transactionHash = receipt.transactionHash || receipt.hash || 'unavailable';
+      let successMessage = `BPMN upload confirmed in block ${receipt.blockNumber}; transaction ${transactionHash}.`;
+      try {
+        const choreography = modeler.get('elementRegistry').getAll()
+          .find(element => element.type === 'bpmn:Choreography');
+        if (choreography) {
+          const count = await refreshInstanceOptions(choreography, contract, modeler, true);
+          successMessage += ` ${count} instance${count === 1 ? '' : 's'} are now available.`;
+        }
+        await updateUI(contract, modeler);
+      } catch (refreshError) {
+        console.error('The BPMN upload succeeded, but the diagram state could not be refreshed.', refreshError);
+        successMessage += ` The upload succeeded, but the editor could not refresh contract state: ${refreshError.message}`;
+      }
+      showNotification(successMessage, 'success');
+    } catch (error) {
+      console.error('Could not upload the selected BPMN diagram.', error);
+      showNotification(`Could not upload the selected BPMN diagram: ${error.message}`, 'error');
+    } finally {
+      uploadButton.disabled = false;
+    }
   });
 
   document.getElementById('js-save-progress').addEventListener('click',async () =>{
-    const result = await modeler.saveXML({ format: true });
-    window.localStorage.setItem('xml',result.xml);
-    location.reload();
+    try {
+      const name = window.prompt('Name this BPMN diagram:', diagramName());
+      if (name === null) {
+        return;
+      }
+      const trimmedName = name.trim();
+      if (!trimmedName) {
+        window.alert('Please enter a name for this BPMN diagram.');
+        return;
+      }
+      const result = await modeler.saveXML({ format: true });
+      const id = await saveDiagram(trimmedName, result.xml);
+      await refreshSavedDiagrams(id);
+      activeSavedDiagramId = String(id);
+      isDirty = false;
+    } catch (error) {
+      console.error('Could not save the BPMN diagram locally.', error);
+      window.alert(`Could not save the BPMN diagram locally: ${error.message}`);
+    }
   });
 
   const lockClosed = document.getElementById('lock-closed');
@@ -270,6 +345,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (isValidating) {
       reporter.validateDiagram();
     }
+    if (contract) {
+      updateUI(contract, modeler).catch(error => {
+        console.error('Could not refresh the editor from contract state.', error);
+        showNotification(`Could not refresh the editor from contract state: ${error.message}`, 'error');
+      });
+    }
   });
   // TODO rimettere la funzione bloccante
   modeler.on('commandStack.connection.create.preExecuted', function(event) {
@@ -296,6 +377,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     }
   });
+
+  try {
+    contract = await connectToBlockchain();
+    await updateUI(contract, modeler);
+    showNotification(`Connected to the ${blockchainTarget} blockchain (chain ${blockchainChainId}); deployed contract verified.`, 'success');
+  } catch (error) {
+    console.error('Could not connect to the configured smart contract.', error);
+    showNotification(`Smart contract connection unavailable: ${error.message}`, 'error');
+  }
 });
 
 
@@ -317,15 +407,7 @@ modeler.get('eventBus').on('element.changed', function(event) {
       });
     });
   }
-  if (event.numberOfInstance) {
-    console.log(event.numberOfInstance)
-    document.getElementById('camunda-instanceNumberId-select').innerHTML = event.numberOfInstance.map(instance => `<option value="${instance.value}"> ${cleanData(instance.name)} [${instance.value}]</option>`).join('');
-  }
 });
-function cleanData(bytes32) {
-  return web3.utils.hexToAscii(bytes32).split('+')[1]?web3.utils.hexToAscii(bytes32).split('+')[1]:web3.utils.hexToAscii(bytes32);
-
-}
 
 
 modeler.get('eventBus').on('commandStack.shape.create.postExecuted', function(event) {
@@ -369,4 +451,3 @@ window.addEventListener('beforeunload', function(e) {
     e.returnValue = '';
   }
 });
-renderModel(xml);

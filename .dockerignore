@@ -1,0 +1,9 @@
+node_modules
+build
+.git
+.cache
+.parcel-cache
+artifacts
+cache
+*.log
+.env

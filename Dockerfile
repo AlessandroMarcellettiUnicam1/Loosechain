@@ -1,7 +1,14 @@
 FROM node:20-alpine
+
 RUN apk add --no-cache util-linux
-WORKDIR home
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm ci
+
 COPY . .
-RUN npm install
-EXPOSE 9013
-CMD ["npm", "run", "dev"]
+
+EXPOSE 9013 8545
+
+CMD ["npm", "run", "docker:start"]

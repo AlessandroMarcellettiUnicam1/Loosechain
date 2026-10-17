@@ -5,3 +5,7 @@ dist
 .idea/
 .cache/
 build
+artifacts/
+cache/
+.parcel-cache/
+.env

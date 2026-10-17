@@ -3,7 +3,9 @@
  * @description This file contains the ABI and address of the EmergencyResponsePlan smart contract on the blockchain.
  */
 
-export const contractAbi = [
+import deployedContracts from './deployed-contract.json';
+
+const legacyContractAbi = [
 	{
 		"anonymous": false,
 		"inputs": [
@@ -923,6 +925,16 @@ export const contractAbi = [
 	}
 ]
 
-export const contractAddress = '0xfAf38A85818276a02f062E5bE1f1954d5F7E19ee';
+const deployedContract = deployedContracts.contractLogic;
 
-
+export const contractAbi = deployedContract.abi.length ? deployedContract.abi : legacyContractAbi;
+export const contractAddress = deployedContract.address || '0xfAf38A85818276a02f062E5bE1f1954d5F7E19ee';
+export const blockchainTarget = deployedContracts.settings
+  ? deployedContracts.settings.target
+  : 'local';
+export const blockchainChainId = deployedContracts.settings
+  ? deployedContracts.settings.chainId
+  : 1337;
+export const blockchainRpcUrl = deployedContracts.settings
+  ? deployedContracts.settings.browserRpcUrl
+  : null;
