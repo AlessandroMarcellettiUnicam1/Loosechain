@@ -9,7 +9,9 @@
     "dev": "parcel app/index.html -p 9013",
     "blockchain:node": "hardhat node --hostname 0.0.0.0",
     "blockchain:deploy": "hardhat run scripts/deploy.js --network docker",
-    "docker:start": "node scripts/docker-start.js"
+    "docker:start": "node scripts/docker-start.js",
+    "experiment:gas": "hardhat run experiments/gas-costs/run.js --network hardhat",
+    "experiment:gas:test": "node --test experiments/gas-costs/test.js"
   },
   "keywords": [
     "choreography-modeler"
