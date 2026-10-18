@@ -1,4 +1,5 @@
 node_modules
+.parcel-api-dev
 build
 .git
 .cache
@@ -7,3 +8,4 @@ artifacts
 cache
 *.log
 .env
+data

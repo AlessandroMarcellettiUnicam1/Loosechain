@@ -18,15 +18,30 @@ deployment.on('exit', code => {
 
   delete process.env.DEPLOYER_PRIVATE_KEY;
 
-  const app = spawn('npm', ['run', 'dev', '--', '--host', '0.0.0.0'], {
+  const build = spawn('npm', ['run', 'build'], {
     stdio: 'inherit',
     shell: process.platform === 'win32'
   });
-  app.on('error', error => {
-    console.error('Could not start the web application.', error);
+  build.on('error', error => {
+    console.error('Could not build the web application.', error);
     process.exitCode = 1;
   });
-  app.on('exit', appCode => {
-    process.exitCode = appCode || 0;
+  build.on('exit', buildCode => {
+    if (buildCode !== 0) {
+      process.exitCode = buildCode || 1;
+      return;
+    }
+
+    const app = spawn('npm', ['start'], {
+      stdio: 'inherit',
+      shell: process.platform === 'win32'
+    });
+    app.on('error', error => {
+      console.error('Could not start the web application and shared diagram API.', error);
+      process.exitCode = 1;
+    });
+    app.on('exit', appCode => {
+      process.exitCode = appCode || 0;
+    });
   });
 });

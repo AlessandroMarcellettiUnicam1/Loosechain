@@ -1,90 +1,44 @@
-const DATABASE_NAME = 'loosechain-diagrams';
-const DATABASE_VERSION = 1;
-const DIAGRAM_STORE = 'diagrams';
-
-let databasePromise;
-
-function openDatabase() {
-  if (!window.indexedDB) {
-    return Promise.reject(new Error('This browser does not support local diagram storage.'));
+async function request(path, options) {
+  let response;
+  try {
+    response = await fetch(`/api/diagrams${path}`, options);
+  } catch (error) {
+    throw new Error(`Could not reach shared diagram storage: ${error.message}`);
   }
 
-  if (!databasePromise) {
-    databasePromise = new Promise((resolve, reject) => {
-      let settled = false;
-      const fail = error => {
-        if (!settled) {
-          settled = true;
-          databasePromise = null;
-          reject(error);
-        }
-      };
-      const request = window.indexedDB.open(DATABASE_NAME, DATABASE_VERSION);
-
-      request.onupgradeneeded = () => {
-        request.result.createObjectStore(DIAGRAM_STORE, {
-          keyPath: 'id',
-          autoIncrement: true
-        });
-      };
-      request.onsuccess = () => {
-        const database = request.result;
-        if (settled) {
-          database.close();
-          return;
-        }
-        settled = true;
-        database.onversionchange = () => {
-          database.close();
-          databasePromise = null;
-        };
-        resolve(database);
-      };
-      request.onerror = () => fail(request.error || new Error('Could not open local diagram storage.'));
-      request.onblocked = () => fail(new Error('Local diagram storage is blocked by another open tab.'));
-    });
+  const result = await response.json();
+  if (!response.ok) {
+    const requestError = new Error(result.message || 'The shared diagram request failed.');
+    requestError.status = response.status;
+    throw requestError;
   }
 
-  return databasePromise;
+  return result;
 }
 
-function requestResult(request) {
-  return new Promise((resolve, reject) => {
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error || new Error('Local diagram storage request failed.'));
-  });
+export function getDiagrams() {
+  return request('', { method: 'GET' });
 }
 
-function transactionComplete(transaction) {
-  return new Promise((resolve, reject) => {
-    transaction.oncomplete = resolve;
-    transaction.onabort = () => reject(transaction.error || new Error('Local diagram storage transaction was aborted.'));
-    transaction.onerror = () => reject(transaction.error || new Error('Local diagram storage transaction failed.'));
-  });
+export function getDiagram(id) {
+  return request(`/${encodeURIComponent(id)}`, { method: 'GET' });
 }
 
-async function runRequest(mode, operation) {
-  const database = await openDatabase();
-  const transaction = database.transaction(DIAGRAM_STORE, mode);
-  const complete = transactionComplete(transaction);
-  const result = requestResult(operation(transaction.objectStore(DIAGRAM_STORE)));
-  const [value] = await Promise.all([result, complete]);
-  return value;
-}
-
-export async function saveDiagram(name, xml) {
-  return runRequest('readwrite', store => store.add({
+export function saveDiagram(name, xml, existingDiagram) {
+  const method = existingDiagram ? 'PUT' : 'POST';
+  const path = existingDiagram ? `/${encodeURIComponent(existingDiagram.id)}` : '';
+  const body = {
     name,
-    xml,
-    updatedAt: new Date().toISOString()
-  }));
-}
+    xml
+  };
 
-export async function getDiagrams() {
-  const diagrams = await runRequest('readonly', store => store.getAll());
-  return diagrams.sort((first, second) => second.updatedAt.localeCompare(first.updatedAt));
-}
+  if (existingDiagram) {
+    body.expectedRevision = existingDiagram.revision;
+  }
 
-export async function getDiagram(id) {
-  return runRequest('readonly', store => store.get(id));
+  return request(path, {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
 }

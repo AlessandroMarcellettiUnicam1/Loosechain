@@ -1,4 +1,6 @@
 import { addTableDefinition } from './helper/TableDefinitionHelper';
+import { is } from 'bpmn-js/lib/util/ModelUtil';
+import createParticipantSubscriptionEntry from './ParticipantSubscription';
 
 /**
  * Adds composition properties for the specified BPMN element to the properties group. The properties include a table
@@ -10,7 +12,6 @@ import { addTableDefinition } from './helper/TableDefinitionHelper';
  * @param {Function} translate - Function to translate labels and descriptions.
  */
 export default function addCompositionProps(group, element, bpmnFactory, translate) {
-  
   addTableDefinition(group, element, bpmnFactory, translate, 'bpmn:Choreography', {
     id: 'messageList',
     description: 'Message List',
@@ -37,4 +38,8 @@ export default function addCompositionProps(group, element, bpmnFactory, transla
     businessObjectProperty: 'participantItems',
     type: 'loose:ParticipantValue'
   });
+
+  if (is(element, 'bpmn:Choreography')) {
+    group.entries.push(createParticipantSubscriptionEntry(element, bpmnFactory, 'process'));
+  }
 }

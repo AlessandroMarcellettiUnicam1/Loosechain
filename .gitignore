@@ -8,4 +8,6 @@ build
 artifacts/
 cache/
 .parcel-cache/
+.parcel-api-dev/
+data/
 .env

@@ -1,4 +1,6 @@
 import { addTableDefinition } from './helper/TableDefinitionHelper';
+import { is } from 'bpmn-js/lib/util/ModelUtil';
+import createParticipantSubscriptionEntry from './ParticipantSubscription';
 
 /**
  * Adds selection properties for the specified BPMN element to the properties group. The properties include a table
@@ -28,4 +30,8 @@ export default function addSelectionProps(group, element, bpmnFactory, translate
     businessObjectProperty: 'participantItems',
     type: 'loose:ParticipantValue'
   });
+
+  if (is(element, 'bpmn:Participant')) {
+    group.entries.push(createParticipantSubscriptionEntry(element, bpmnFactory, 'role'));
+  }
 }

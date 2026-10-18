@@ -2,13 +2,18 @@
 
 Loosechain is a browser-based BPMN 2.0 choreography editor built with
 [chor-js](https://github.com/bptlab/chor-js). It combines diagram editing and
-validation with local diagram storage and smart-contract-backed choreography
+validation with shared diagram storage and smart-contract-backed choreography
 instances.
 
 ## Features
 
 - Create and edit BPMN choreography diagrams; open and download BPMN/XML files.
-- Save named diagrams in the browser's IndexedDB and reopen them later.
+- Save named diagrams to a shared server-side SQLite database and open them
+  from other clients using the same deployment.
+- Detect stale saves so one client cannot silently overwrite another client's
+  saved changes.
+- Subscribe a MetaMask address to a whole choreography or a selected participant
+  role.
 - Validate diagrams with the built-in validator.
 - Deploy the Solidity contracts in `app/contracts` with Hardhat.
 - Upload a choreography to the configured blockchain, read its instances, inspect
@@ -79,9 +84,16 @@ to `app/lib/blockchain/deployed-contract.json`, and starts the web editor.
 
 The deployment is performed each time the app container starts. The blockchain
 container has no persistent volume, so its local chain state and deployments are
-reset when the blockchain container is recreated. Browser-saved diagrams are
-stored separately in IndexedDB and remain in that browser for the same site
-origin.
+reset when the blockchain container is recreated. Named diagrams are stored in
+the `diagrams-data` volume and remain available to clients after container
+restarts.
+
+The shared SQLite database is intended for a single app/API instance. Keep the
+volume persistent and back it up with the rest of the deployment data. If the
+service needs multiple app instances, use a database designed for that topology
+instead. The app currently has no user authentication or per-diagram access
+control; restrict access at the network or reverse-proxy layer if the deployment
+must not be publicly editable.
 
 Stop the containers with:
 
@@ -102,19 +114,27 @@ npm ci
 npm run dev
 ```
 
-Open <http://localhost:9013>. The development server does not start a blockchain
-or deploy contracts. Configure and start a reachable blockchain, deploy the
-contracts, and ensure `app/lib/blockchain/deployed-contract.json` contains the
-matching ABI, address, target, chain ID, and browser RPC URL (for a local
-network) before loading the editor. The Docker workflow creates this file
-automatically.
+Open <http://localhost:9013>. The development server includes the shared
+diagram API and creates `data/diagrams.sqlite` by default. Set `DIAGRAM_DB_PATH`
+to store the database elsewhere. Set `HOST=0.0.0.0` when other machines need to
+reach the development server, and `PORT` to change its port.
+
+The development server does not start a blockchain or deploy contracts.
+Configure and start a reachable blockchain, deploy the contracts, and ensure
+`app/lib/blockchain/deployed-contract.json` contains the matching ABI, address,
+target, chain ID, and browser RPC URL (for a local network) before loading the
+editor. The Docker workflow creates this file automatically.
 
 Other available commands:
 
 ```shell
 npm run build             # Build the editor into build/
+npm start                 # Serve build/ and the shared diagram API
 npm run blockchain:node   # Start a Hardhat node
 ```
+
+Run `npm run build` before `npm start`. Set `HOST`, `PORT`, and
+`DIAGRAM_DB_PATH` to configure the production server and SQLite file.
 
 The `blockchain:deploy` command is used by the Docker startup script and expects
 the `docker` network hostname configured in `hardhat.config.js`; it is not a
@@ -124,25 +144,37 @@ standalone host deployment command.
 
 1. **Open a diagram:** use the folder button to open a `.bpmn` or `.xml` file,
    or create a new diagram with the new-document button.
-2. **Save locally:** use the save button and provide a name. Saved diagrams are
-   held in this browser's IndexedDB; they are not uploaded to a server.
-3. **Reopen a saved diagram:** choose it from the saved-diagram selector. Loading
-   a diagram replaces the current editor contents.
+2. **Save a shared diagram:** use the save button and provide a name for a new
+   diagram. Saving an already-open shared diagram updates it without asking for
+   its name again.
+3. **Open a shared diagram:** choose it from the shared-diagram selector.
+   Loading a diagram replaces the current editor contents.
 4. **Edit and validate:** select BPMN elements and use the properties panel.
    Use the validator button to toggle diagram validation.
-5. **Upload a choreography:** select the diagram to upload and use the upload
+5. **Subscribe:** select the choreography element and click **Subscribe to this
+   process with MetaMask** in **Composition Degree** to add the connected
+   address to the process. To subscribe to one role, select its participant
+   band and click **Subscribe to this role with MetaMask** in **Selection
+   Degree**. Save the diagram to share the updated participant list.
+6. **Upload a choreography:** select the diagram to upload and use the upload
    button. MetaMask asks for an account when needed. A popup reports transaction
-   confirmation, including the transaction hash and block.
-6. **Select an existing instance:** select the choreography element and open
+   confirmation, including the transaction hash and block. The subscription is
+   included in contract data when the updated diagram is uploaded.
+7. **Select an existing instance:** select the choreography element and open
    its **Instance** properties tab. The instance selector is populated from the
    configured contract; choose an instance to inspect.
-7. **Read instance status:** use **Get instance status** to load the selected
+8. **Read instance status:** use **Get instance status** to load the selected
    instance state and update the diagram's element colors.
-8. **Execute a message:** select a message, configure its message and attribute
+9. **Execute a message:** select a message, configure its message and attribute
    properties as needed, then use **Execute message** in the **Execution**
    properties. The editor reports success or failure and refreshes the status
    after a successful transaction.
-9. **Export:** use the download buttons to save the diagram as BPMN/XML or SVG.
+10. **Export:** use the download buttons to save the diagram as BPMN/XML or SVG.
+
+Saving is shared but not real-time: clients see updates when they reopen or
+refresh the diagram list. If another client saves a diagram after it was opened,
+the stale client receives a conflict instead of overwriting the newer version;
+reopen the diagram before continuing.
 
 Success and error notifications can be dismissed with the **×** button. Local
 blockchain transactions are sent directly to Hardhat using the selected,

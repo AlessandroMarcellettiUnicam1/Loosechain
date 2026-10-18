@@ -5,8 +5,10 @@
   "main": "app/app.js",
   "scripts": {
     "lint": "eslint .",
-    "build": "parcel build app/index.html -d build --public-url ./",
-    "dev": "parcel app/index.html -p 9013",
+    "build": "parcel build app/index.html -d build --public-url ./ --no-minify",
+    "dev": "node scripts/server.js --development",
+    "start": "node scripts/server.js",
+    "test": "node --test tests/diagram-api.test.js",
     "blockchain:node": "hardhat node --hostname 0.0.0.0",
     "blockchain:deploy": "hardhat run scripts/deploy.js --network docker",
     "docker:start": "node scripts/docker-start.js",
@@ -48,6 +50,7 @@
     "parcel-plugin-stringify-anything": "^1.2.0"
   },
   "dependencies": {
+    "better-sqlite3": "^11.10.0",
     "bpmn-js": "^8.10.0",
     "bpmn-js-color-picker": "^0.4.0",
     "bpmn-js-properties-panel": "^0.46.0",

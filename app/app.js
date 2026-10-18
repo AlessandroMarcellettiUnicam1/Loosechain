@@ -124,14 +124,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   const savedDiagrams = document.getElementById('js-saved-diagrams');
-  let activeSavedDiagramId = '';
+  let activeSavedDiagram = null;
   const refreshSavedDiagrams = async selectedId => {
     const diagrams = await getDiagrams();
     savedDiagrams.innerHTML = '';
 
     const placeholder = document.createElement('option');
     placeholder.value = '';
-    placeholder.textContent = diagrams.length ? 'Select saved diagram' : 'No saved diagrams';
+    placeholder.textContent = diagrams.length ? 'Select shared diagram' : 'No shared diagrams';
     savedDiagrams.appendChild(placeholder);
 
     diagrams.forEach(diagram => {
@@ -149,33 +149,38 @@ document.addEventListener('DOMContentLoaded', async () => {
   try {
     await refreshSavedDiagrams();
   } catch (error) {
-    console.error('Could not load locally saved diagrams.', error);
-    window.alert(`Could not load locally saved diagrams: ${error.message}`);
+    console.error('Could not load shared diagrams.', error);
+    showNotification(`Could not load shared diagrams: ${error.message}`, 'error');
   }
+
+  const clearActiveSavedDiagram = () => {
+    activeSavedDiagram = null;
+    savedDiagrams.value = '';
+  };
 
   savedDiagrams.addEventListener('change', async () => {
     const selectedId = savedDiagrams.value;
     if (!selectedId) {
-      activeSavedDiagramId = '';
+      activeSavedDiagram = null;
       return;
     }
 
-    if (isDirty && !window.confirm('Loading this saved diagram will discard unsaved changes. Continue?')) {
-      savedDiagrams.value = activeSavedDiagramId;
+    if (isDirty && !window.confirm('Loading this shared diagram will discard unsaved changes. Continue?')) {
+      savedDiagrams.value = activeSavedDiagram ? String(activeSavedDiagram.id) : '';
       return;
     }
 
     savedDiagrams.disabled = true;
     try {
-      const diagram = await getDiagram(Number(selectedId));
+      const diagram = await getDiagram(selectedId);
       if (!diagram) {
-        throw new Error('The selected saved diagram could not be found.');
+        throw new Error('The selected shared diagram could not be found.');
       }
       await renderModel(diagram.xml);
       lastFile = { name: diagram.name };
-      activeSavedDiagramId = selectedId;
+      activeSavedDiagram = diagram;
     } catch (error) {
-      savedDiagrams.value = activeSavedDiagramId;
+      savedDiagrams.value = activeSavedDiagram ? String(activeSavedDiagram.id) : '';
       console.error('Could not load the selected BPMN diagram.', error);
       window.alert(`Could not load the selected BPMN diagram: ${error.message}`);
     } finally {
@@ -236,11 +241,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  document.getElementById('js-save-progress').addEventListener('click',async () =>{
+  const saveButton = document.getElementById('js-save-progress');
+  saveButton.addEventListener('click', async () => {
+    saveButton.disabled = true;
     try {
-      const name = window.prompt('Name this BPMN diagram:', diagramName());
-      if (name === null) {
-        return;
+      let name = activeSavedDiagram ? activeSavedDiagram.name : diagramName();
+      if (!activeSavedDiagram) {
+        name = window.prompt('Name this BPMN diagram:', name);
+        if (name === null) {
+          return;
+        }
       }
       const trimmedName = name.trim();
       if (!trimmedName) {
@@ -248,13 +258,22 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
       }
       const result = await modeler.saveXML({ format: true });
-      const id = await saveDiagram(trimmedName, result.xml);
-      await refreshSavedDiagrams(id);
-      activeSavedDiagramId = String(id);
+      activeSavedDiagram = await saveDiagram(trimmedName, result.xml, activeSavedDiagram);
+      lastFile = { name: activeSavedDiagram.name };
       isDirty = false;
+      try {
+        await refreshSavedDiagrams(activeSavedDiagram.id);
+      } catch (refreshError) {
+        console.error('The diagram was saved, but the shared diagram list could not be refreshed.', refreshError);
+        showNotification(`Diagram saved, but the shared list could not be refreshed: ${refreshError.message}`, 'error');
+        return;
+      }
+      showNotification('Diagram saved to shared storage.', 'success');
     } catch (error) {
-      console.error('Could not save the BPMN diagram locally.', error);
-      window.alert(`Could not save the BPMN diagram locally: ${error.message}`);
+      console.error('Could not save the BPMN diagram to shared storage.', error);
+      showNotification(`Could not save the BPMN diagram: ${error.message}`, 'error');
+    } finally {
+      saveButton.disabled = false;
     }
   });
 
@@ -279,6 +298,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   newDiagram.addEventListener('click', async e => {
     await renderModel(blankXml);
     lastFile = false;
+    clearActiveSavedDiagram();
   });
 
   // load diagram from disk
@@ -288,6 +308,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (file) {
       const reader = new FileReader();
       lastFile = file;
+      clearActiveSavedDiagram();
       reader.addEventListener('load', async () => {
         await renderModel(reader.result);
         loadDiagram.value = null; // allows reloading the same file
@@ -313,6 +334,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (file) {
       const reader = new FileReader();
       lastFile = file;
+      clearActiveSavedDiagram();
       reader.addEventListener('load', () => {
         renderModel(reader.result);
       }, false);

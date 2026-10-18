@@ -14,17 +14,15 @@ export async function translateDiagram(modeler, contract) {
   let controlFlowElementList = [];
   let messagges = [];
   let messageAttributesList = [];
-  // TODO: figure out how to pass the address to the front-end for the participant list 
   let addressKeyMappingList = [];
   let participantList = [];
-  let keyMappingParticipants = [];
   let edgeConditionList = [];
   let subChoreographyList = [];
   let idChoreography;
   let idInstance;
   for (const e in elements) {
     if (elements[e].element.type.includes("Task")) {
-      createActivity(elements[e], activityList, addressKeyMappingList, participantList, keyMappingParticipants)
+      createActivity(elements[e], activityList, addressKeyMappingList, participantList)
     } else if (elements[e].element.type.includes("Message")) {
       createMessage(elements[e], messagges, activityList, messageAttributesList)
     } else if (elements[e].element.type.includes("Event") || elements[e].element.type.includes("Gateway")) {
@@ -46,7 +44,6 @@ export async function translateDiagram(modeler, contract) {
   idInstance= idInstance=web3.utils.padRight(web3.utils.asciiToHex(idInstance), 64);
   console.log("activityList",activityList)
   console.log("messagges",messagges)
-  console.log("participantList",participantList)
   console.log("messageAttributesList",messageAttributesList)
   console.log("controlFlowElementList",controlFlowElementList)
   console.log("edgeConditionList",edgeConditionList)
@@ -153,7 +150,7 @@ export async function translateDiagram(modeler, contract) {
 }
 
 
-function createActivity(diagramElement, activityList, addressKeyMappingList, participantList, keyMappingParticipants) {
+function createActivity(diagramElement, activityList, addressKeyMappingList, participantList) {
   let activity = {
     id: "",
     name: "",
@@ -205,35 +202,44 @@ function createActivity(diagramElement, activityList, addressKeyMappingList, par
     activity.messageOut = web3.utils.padRight(0, 64);
   }
   activityList.push(activity);
-  console.log(diagramElement.element.businessObject.participantRef[0].participantItems)
-  if (diagramElement.element.businessObject.participantRef[0].participantItems && diagramElement.element.businessObject.participantRef[0].participantItems.length > 0) {
-    // console.log(diagramElement.element.businessObject)
-
-    if (!addressKeyMappingList.includes(activity.initiator)) {
+  const participantRefs = diagramElement.element.businessObject.participantRef;
+  [activity.initiator, activity.target].forEach((keyMapping, index) => {
+    const participantItems = participantRefs[index].get('participantItems') || [];
+    if (participantItems.length > 0 && !addressKeyMappingList.includes(keyMapping)) {
       participantList.push({
-        keyMapping: activity.initiator,
-        addr: diagramElement.element.businessObject.participantRef[0].participantItems.map(e => e.name)
-      })
-      addressKeyMappingList.push(activity.initiator)
+        keyMapping,
+        addr: participantItems.map(item => item.name)
+      });
+      addressKeyMappingList.push(keyMapping);
     }
-    if (!addressKeyMappingList.includes(activity.target)) {
+  });
 
+  let choreography = diagramElement.element.businessObject.$parent;
+  while (choreography && choreography.$type !== 'bpmn:Choreography') {
+    choreography = choreography.$parent;
+  }
+  const compositionItems = choreography ? choreography.get('participantItems') : [];
+  const compositionKey = web3.utils.padRight(0, 64);
+  if (compositionItems && compositionItems.length > 0) {
+    const compositionMapping = participantList.find(
+      participant => participant.keyMapping === compositionKey
+    );
+    const compositionAddresses = compositionItems.map(item => item.name);
+    if (compositionMapping) {
+      const existingAddresses = new Set(compositionMapping.addr.map(address => address.toLowerCase()));
+      compositionAddresses.forEach(address => {
+        const normalizedAddress = address.toLowerCase();
+        if (!existingAddresses.has(normalizedAddress)) {
+          compositionMapping.addr.push(address);
+          existingAddresses.add(normalizedAddress);
+        }
+      });
+    } else {
       participantList.push({
-        keyMapping: activity.target,
-        addr: diagramElement.element.businessObject.participantRef[1].participantItems.map(e => e.name)
-      })
-      addressKeyMappingList.push(activity.target);
+        keyMapping: compositionKey,
+        addr: compositionAddresses
+      });
     }
-  } else if (participantList.length < 1) {
-    let participantAddress = [];
-
-    diagramElement.element.businessObject.$parent.participantItems.forEach(e => {
-      participantAddress.push(e.name)
-    })
-    participantList.push({
-      addr: participantAddress,
-      keyMapping: web3.utils.padRight(0, 64)
-    })
   }
 }
 
