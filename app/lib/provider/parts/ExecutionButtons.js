@@ -94,29 +94,24 @@ export async function buttonExecutePressedComposition(businessObject) {
     const asciiResult = web3.utils.asciiToHex(tempActivity.id);
     activity.id = web3.utils.padRight(asciiResult, 64);
     activity.name = web3.utils.padRight(asciiResult, 64);
-    if (
-        tempActivity.$parent.participantItems &&
-        tempActivity.$parent.participantItems.length > 0
-    ) {
-        activity.initiator = web3.utils.padRight(0, 64);
-        activity.target = web3.utils.padRight(0, 64);
-    } else {
-        activity.initiator = web3.utils.padRight(
-            web3.utils.asciiToHex(tempActivity.participantRef[0].name),
-            64
-        );
-        activity.target = web3.utils.padRight(
-            web3.utils.asciiToHex(tempActivity.participantRef[1].name),
-            64
-        );
-    }
+    activity.initiator = web3.utils.padRight(
+        web3.utils.asciiToHex(tempActivity.participantRef[0].id),
+        64
+    );
+    activity.target = web3.utils.padRight(
+        web3.utils.asciiToHex(tempActivity.participantRef[1].id),
+        64
+    );
     if (tempActivity.incoming) {
         activity.idInElement = web3.utils.padRight(
             web3.utils.asciiToHex(tempActivity.incoming[0].sourceRef.id),
             64
         );
     } else if (tempActivity.$parent.$type.includes('bpmn:SubChoreography')) {
-        console.log("CASO IN CUI L'attivita non è connessa");
+        activity.idOutElement = web3.utils.padRight(
+            web3.utils.asciiToHex(tempActivity.$parent.incoming[0].sourceRef.id),
+            64
+        );
     } else {
         activity.idInElement = web3.utils.padRight(0, 64);
     }
@@ -254,8 +249,9 @@ export async function buttonExecutePressedComposition(businessObject) {
     );
 
     const accountAddress = await getAccount();
+    const participantAdditions = collectParticipantAdditions(modeler);
     return await contract.methods
-      .executeMessage(
+      .executeMessageWithParticipants(
             activity,
             message,
             controlFlowElementList,
@@ -266,6 +262,7 @@ export async function buttonExecutePressedComposition(businessObject) {
             diff.edgeConditionList,
             diff.messages,
             hashInstance,
+            participantAdditions,
         )
         .send({
             from: accountAddress,
@@ -273,6 +270,53 @@ export async function buttonExecutePressedComposition(businessObject) {
             gasPrice: gasPrice,
         });
 }
+
+function collectParticipantAdditions(modelerInstance) {
+    const web3Instance = web3;
+    const elements = modelerInstance.get('elementRegistry')['_elements'];
+    const additions = new Map();
+
+    for (const key in elements) {
+        const task = elements[key].element.businessObject;
+        if (!elements[key].element.type.includes('ChoreographyTask')) {
+            continue;
+        }
+
+        let choreography = task.$parent;
+        while (choreography && choreography.$type !== 'bpmn:Choreography') {
+            choreography = choreography.$parent;
+        }
+        const processParticipants = choreography
+            ? (choreography.get('participantItems') || []).map(item => item.name)
+            : [];
+
+        (task.participantRef || []).forEach(participant => {
+            const role = web3Instance.utils.padRight(
+                web3Instance.utils.asciiToHex(participant.id),
+                64
+            );
+            const roleParticipants = participant.get('participantItems') || [];
+            const addresses = roleParticipants.length > 0
+                ? roleParticipants.map(item => item.name)
+                : processParticipants;
+
+            addresses.forEach(account => {
+                if (!web3Instance.utils.isAddress(account)) {
+                    throw new Error(`Participant "${participant.name}" has an invalid Ethereum address: ${account}`);
+                }
+
+                const normalizedAccount = account.toLowerCase();
+                const additionKey = `${role}:${normalizedAccount}`;
+                if (!additions.has(additionKey)) {
+                    additions.set(additionKey, { role, account });
+                }
+            });
+        });
+    }
+
+    return Array.from(additions.values());
+}
+
 function searchForNextActivities(
     tempActivity,
     controlFlowElementList,
@@ -471,16 +515,14 @@ function createActivity(diagramElement, activityList, addressKeyMappingList, par
     const asciiResult = web3.utils.asciiToHex(diagramElement.element.id);
     activity.id = web3.utils.padRight(asciiResult, 64);
     activity.name = web3.utils.padRight(asciiResult, 64);
-    if (diagramElement.element.businessObject.participantRef[0].name) {
-      activity.initiator = web3.utils.padRight(web3.utils.asciiToHex(diagramElement.element.businessObject.participantRef[0].name), 64);
-    } else {
-      activity.initiator = web3.utils.padRight(0, 64);
-    }
-    if (diagramElement.element.businessObject.participantRef[1].name) {
-      activity.target = web3.utils.padRight(web3.utils.asciiToHex(diagramElement.element.businessObject.participantRef[1].name), 64);
-    } else {
-      activity.target = web3.utils.padRight(0, 64);
-    }
+    activity.initiator = web3.utils.padRight(
+      web3.utils.asciiToHex(diagramElement.element.businessObject.participantRef[0].id),
+      64
+    );
+    activity.target = web3.utils.padRight(
+      web3.utils.asciiToHex(diagramElement.element.businessObject.participantRef[1].id),
+      64
+    );
     if (diagramElement.element.businessObject.incoming && diagramElement.element.businessObject.incoming.length > 0) {
       activity.idInElement = web3.utils.padRight(web3.utils.asciiToHex(diagramElement.element.businessObject.incoming[0].sourceRef.id), 64);
     } else if (diagramElement.element.businessObject.$parent.$type.includes('bpmn:SubChoreography')) {
@@ -523,7 +565,21 @@ function createActivity(diagramElement, activityList, addressKeyMappingList, par
     const asciiResult = web3.utils.asciiToHex(diagramElement.element.id);
     message.id = web3.utils.padRight(asciiResult, 64);
     message.name = web3.utils.padRight(asciiResult, 64);
-    message.mappingKey = web3.utils.padRight(0, 64);
+    const businessObject = diagramElement.element.businessObject;
+    const messageItems = businessObject.get('messageItems') || [];
+    if (messageItems.length > 0 && businessObject.name) {
+      message.mappingKey = web3.utils.padRight(
+        web3.utils.asciiToHex(businessObject.name.split('(')[0]),
+        64
+      );
+    } else if (businessObject.$attrs.messageItem) {
+      message.mappingKey = web3.utils.padRight(
+        web3.utils.asciiToHex(businessObject.$attrs.messageItem),
+        64
+      );
+    } else {
+      message.mappingKey = web3.utils.padRight(0, 64);
+    }
 
     message.sourceParticipant = '0x0000000000000000000000000000000000000000';
     message.targetParticipant = '0x0000000000000000000000000000000000000000';

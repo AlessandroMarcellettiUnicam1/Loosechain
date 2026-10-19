@@ -4,6 +4,7 @@ pragma solidity >=0.8.0;
 contract contractMemory{
 
     struct Instance{
+        bool initialized;
         mapping(bytes32=>Activity) activities;
         mapping(bytes32=>address []) participants;
         mapping(bytes32=>ControlFlowElement) controlFlowElementList;
@@ -113,7 +114,9 @@ contract contractMemory{
     // When i create the contract i passed all the element in the choreography in the selection case i have almost all element populated 
     function setChoreography(Activity [] memory allActivities,Message [] memory allMessages,PartecipantRoles[] memory participantList,
     MessageAttributes[] memory messagesAttributeList,ControlFlowElement[] memory allControlFlowElement,EdgeCondition[] memory edgeCondition,
-    bytes32 idInstance,bytes32 hashIdInstance) public{
+    bytes32 idInstance,bytes32 hashIdInstance) public virtual{
+        require(!instancies[hashIdInstance].initialized,"Instance already initialized");
+        instancies[hashIdInstance].initialized=true;
 
         for (uint i=0;i<allActivities.length;i++){
             instancies[hashIdInstance].activities[allActivities[i].id]=allActivities[i];

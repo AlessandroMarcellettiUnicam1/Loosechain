@@ -20,14 +20,14 @@ contract contractLogic is contractMemory{
 
 //function to set the activity in the composition case 
 //for the selection case I already have all the data so it is useless
-    function setTaskRuntime(Activity memory act,bytes32 hashInstance) checkKeyParicipants(act.initiator,hashInstance) checkKeyParicipants(act.target,hashInstance)public {
+    function setTaskRuntime(Activity memory act,bytes32 hashInstance) checkKeyParicipants(act.initiator,hashInstance) checkKeyParicipants(act.target,hashInstance) private {
      //   require(activities[act.id].id==act.id,"id Activity");
    //     require(act.messageIn==messages[act.messageIn].id,"message in");
    //     require(act.messageOut==messages[act.messageOut].id,"message out");
         instancies[hashInstance].activities[act.id]=act;
     }
 //function to set the message in the composition case 
-    function setMessageRuntime(Message memory _message,bytes32 hashInstance) checkKeyMessage(_message.mappingKey,hashInstance)public {
+    function setMessageRuntime(Message memory _message,bytes32 hashInstance) checkKeyMessage(_message.mappingKey,hashInstance) private {
         require(checkAddressParticipants(instancies[hashInstance].activities[_message.idActivity].initiator,_message.sourceParticipant,hashInstance),"address initiator");
         require(checkAddressParticipants(instancies[hashInstance].activities[_message.idActivity].target,_message.targetParticipant,hashInstance),"address target");
         instancies[hashInstance].messages[_message.id]=_message;
@@ -288,7 +288,26 @@ function evaluateNextGateway(bytes32 _idInElement,bytes32 hashInstance) private 
     ControlFlowElement[] memory currentcontrolFlowElement,
     bytes32 [] memory attributi, bytes32[] memory value,Activity[] memory activityList,
     ControlFlowElement[] memory controlFlowElement,EdgeCondition[] memory edgeCondition,
-    Message[] memory messageList, bytes32 hashInstance) public {
+    Message[] memory messageList, bytes32 hashInstance) public virtual {
+        _executeMessage(
+            _activity,
+            _message,
+            currentcontrolFlowElement,
+            attributi,
+            value,
+            activityList,
+            controlFlowElement,
+            edgeCondition,
+            messageList,
+            hashInstance
+        );
+    }
+
+    function _executeMessage(Activity memory _activity,Message memory _message,
+    ControlFlowElement[] memory currentcontrolFlowElement,
+    bytes32 [] memory attributi, bytes32[] memory value,Activity[] memory activityList,
+    ControlFlowElement[] memory controlFlowElement,EdgeCondition[] memory edgeCondition,
+    Message[] memory messageList, bytes32 hashInstance) internal {
         require(instancies[hashInstance].messages[_message.id].executed==false,"already executed");
         
         setTaskRuntime(_activity,hashInstance);

@@ -8,7 +8,7 @@
     "build": "parcel build app/index.html -d build --public-url ./ --no-minify",
     "dev": "node scripts/server.js --development",
     "start": "node scripts/server.js",
-    "test": "node --test tests/diagram-api.test.js",
+    "test": "node --test tests/diagram-api.test.js && hardhat test",
     "blockchain:node": "hardhat node --hostname 0.0.0.0",
     "blockchain:deploy": "hardhat run scripts/deploy.js --network docker",
     "docker:start": "node scripts/docker-start.js",

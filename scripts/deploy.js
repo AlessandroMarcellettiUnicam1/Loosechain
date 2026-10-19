@@ -7,6 +7,7 @@ async function main() {
   const contracts = [
     ['app/contracts/contractMemory.sol:contractMemory', 'contractMemory'],
     ['app/contracts/contracLogic.sol:contractLogic', 'contractLogic'],
+    ['app/contracts/contractLogicV2.sol:contractLogicV2', 'contractLogicV2'],
     ['app/contracts/emergencyResponsePlan_none.sol:EmergencyResponsePlan', 'EmergencyResponsePlan']
   ];
 

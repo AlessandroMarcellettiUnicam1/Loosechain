@@ -34,7 +34,23 @@ if (isPublicTarget) {
 }
 
 module.exports = {
-  solidity: '0.8.20',
+  solidity: {
+    compilers: [
+      { version: '0.8.20' }
+    ],
+    overrides: {
+      'app/contracts/contractLogicV2.sol': {
+        version: '0.8.20',
+        settings: {
+          viaIR: true,
+          optimizer: {
+            enabled: true,
+            runs: 200
+          }
+        }
+      }
+    }
+  },
   paths: {
     sources: './app/contracts'
   },

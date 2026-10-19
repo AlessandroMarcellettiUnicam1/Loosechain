@@ -24,7 +24,7 @@ export default function addExecutionProps(group, element, bpmnFactory, translate
   if (is(element, 'bpmn:Message')) {
     addMessageProps(group, businessObject, translate,element,bpmnFactory);
 
-    
+
   }
 
   if (is(element, 'bpmn:Participant')) {
@@ -92,7 +92,7 @@ function addMessageProps(group, businessObject, translate,element,bpmnFactory) {
           }
         } catch (error) {
           console.error('Could not execute the selected message.', error);
-          notify(`Could not execute the selected message: ${error.message}`, 'error');
+          notify(`Could not execute the selected message: ${getTransactionErrorMessage(error)}`, 'error');
         }
       }
     }
@@ -101,6 +101,52 @@ function addMessageProps(group, businessObject, translate,element,bpmnFactory) {
 
 }
 
+function getTransactionErrorMessage(error) {
+  const pending = [error];
+  const visited = new Set();
+  let fallbackMessage;
+  let revertMessage;
+
+  while (pending.length > 0) {
+    const current = pending.shift();
+    if (!current || (typeof current !== 'object' && typeof current !== 'function') || visited.has(current)) {
+      continue;
+    }
+    visited.add(current);
+
+    if (typeof current.customErrorName === 'string' && current.customErrorName) {
+      const args = Array.isArray(current.customErrorArguments) && current.customErrorArguments.length > 0
+        ? `(${current.customErrorArguments.join(', ')})`
+        : '';
+      return `${current.customErrorName}${args}`;
+    }
+    if (typeof current.errorName === 'string' && current.errorName) {
+      const args = Array.isArray(current.errorArgs) && current.errorArgs.length > 0
+        ? `(${current.errorArgs.join(', ')})`
+        : '';
+      return `${current.errorName}${args}`;
+    }
+    if (typeof current.reason === 'string' && current.reason.trim()) {
+      return current.reason.trim();
+    }
+
+    if (typeof current.message === 'string' && current.message.trim()) {
+      fallbackMessage = fallbackMessage || current.message.trim();
+      const match = current.message.match(/(?:execution reverted|reverted with reason string|revert reason string)[:\s'"]+(.+?)(?:["']?$)/i);
+      if (match && match[1]) {
+        revertMessage = match[1].trim().replace(/^['"]|['"]$/g, '');
+      }
+    }
+
+    ['cause', 'error', 'originalError', 'innerError'].forEach(key => {
+      if (current[key]) {
+        pending.push(current[key]);
+      }
+    });
+  }
+
+  return revertMessage || fallbackMessage || String(error);
+}
 
 /**
  * Adds participant properties to the properties panel group. The properties include a select box for participant items.

@@ -78,6 +78,9 @@ docker compose up --build
 Compose starts the Hardhat node, waits for it to be healthy, deploys the
 contracts in `app/contracts`, writes the generated ABI/address/network settings
 to `app/lib/blockchain/deployed-contract.json`, and starts the web editor.
+The app startup deploys `contractLogicV2`, then builds the editor against that
+deployment. When changing contract or app code, use `docker compose up --build`
+so Docker rebuilds the image before deploying and starting the app.
 
 - Editor: <http://localhost:9013>
 - Local Hardhat JSON-RPC (local target): <http://127.0.0.1:8545>
@@ -91,9 +94,12 @@ restarts.
 The shared SQLite database is intended for a single app/API instance. Keep the
 volume persistent and back it up with the rest of the deployment data. If the
 service needs multiple app instances, use a database designed for that topology
-instead. The app currently has no user authentication or per-diagram access
-control; restrict access at the network or reverse-proxy layer if the deployment
-must not be publicly editable.
+instead. The smart contract checks message execution against the wallet
+addresses associated with BPMN participant roles. An authorized executor may
+add addresses to participant roles during message execution. This is
+contract-level workflow authorization, not authentication for the web editor or
+its shared diagram API; restrict access at the network or reverse-proxy layer
+if those services must not be publicly editable.
 
 Stop the containers with:
 

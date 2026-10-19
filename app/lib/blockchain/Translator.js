@@ -167,16 +167,9 @@ function createActivity(diagramElement, activityList, addressKeyMappingList, par
   const asciiResult = web3.utils.asciiToHex(diagramElement.element.id);
   activity.id = web3.utils.padRight(asciiResult, 64)
   activity.name = web3.utils.padRight(asciiResult, 64)
-  if (diagramElement.element.businessObject.participantRef[0].name) {
-    activity.initiator = web3.utils.padRight(web3.utils.asciiToHex(diagramElement.element.businessObject.participantRef[0].name), 64);
-  } else {
-    activity.initiator = web3.utils.padRight(0, 64);
-  }
-  if (diagramElement.element.businessObject.participantRef[1].name) {
-    activity.target = web3.utils.padRight(web3.utils.asciiToHex(diagramElement.element.businessObject.participantRef[1].name), 64);
-  } else {
-    activity.target = web3.utils.padRight(0, 64);
-  }
+  const participantRefs = diagramElement.element.businessObject.participantRef;
+  activity.initiator = web3.utils.padRight(web3.utils.asciiToHex(participantRefs[0].id), 64);
+  activity.target = web3.utils.padRight(web3.utils.asciiToHex(participantRefs[1].id), 64);
   if (diagramElement.element.businessObject.incoming && diagramElement.element.businessObject.incoming.length > 0) {
     activity.idInElement = web3.utils.padRight(web3.utils.asciiToHex(diagramElement.element.businessObject.incoming[0].sourceRef.id), 64);
   } else if (diagramElement.element.businessObject.$parent.$type.includes("bpmn:SubChoreography")) {
@@ -202,45 +195,35 @@ function createActivity(diagramElement, activityList, addressKeyMappingList, par
     activity.messageOut = web3.utils.padRight(0, 64);
   }
   activityList.push(activity);
-  const participantRefs = diagramElement.element.businessObject.participantRef;
-  [activity.initiator, activity.target].forEach((keyMapping, index) => {
-    const participantItems = participantRefs[index].get('participantItems') || [];
-    if (participantItems.length > 0 && !addressKeyMappingList.includes(keyMapping)) {
-      participantList.push({
-        keyMapping,
-        addr: participantItems.map(item => item.name)
-      });
-      addressKeyMappingList.push(keyMapping);
-    }
-  });
-
   let choreography = diagramElement.element.businessObject.$parent;
   while (choreography && choreography.$type !== 'bpmn:Choreography') {
     choreography = choreography.$parent;
   }
-  const compositionItems = choreography ? choreography.get('participantItems') : [];
-  const compositionKey = web3.utils.padRight(0, 64);
-  if (compositionItems && compositionItems.length > 0) {
-    const compositionMapping = participantList.find(
-      participant => participant.keyMapping === compositionKey
-    );
-    const compositionAddresses = compositionItems.map(item => item.name);
-    if (compositionMapping) {
-      const existingAddresses = new Set(compositionMapping.addr.map(address => address.toLowerCase()));
-      compositionAddresses.forEach(address => {
+  [activity.initiator, activity.target].forEach((keyMapping, index) => {
+    const participantItems = participantRefs[index].get('participantItems') || [];
+    const addresses = participantItems.length > 0
+      ? participantItems.map(item => item.name)
+      : (choreography ? (choreography.get('participantItems') || []).map(item => item.name) : []);
+    if (addresses.length > 0 && !addressKeyMappingList.includes(keyMapping)) {
+      const uniqueAddresses = [];
+      const seenAddresses = new Set();
+      addresses.forEach(address => {
+        if (!web3.utils.isAddress(address)) {
+          throw new Error(`Participant "${participantRefs[index].name}" has an invalid Ethereum address: ${address}`);
+        }
         const normalizedAddress = address.toLowerCase();
-        if (!existingAddresses.has(normalizedAddress)) {
-          compositionMapping.addr.push(address);
-          existingAddresses.add(normalizedAddress);
+        if (!seenAddresses.has(normalizedAddress)) {
+          seenAddresses.add(normalizedAddress);
+          uniqueAddresses.push(address);
         }
       });
-    } else {
       participantList.push({
-        keyMapping: compositionKey,
-        addr: compositionAddresses
+        keyMapping,
+        addr: uniqueAddresses
       });
+      addressKeyMappingList.push(keyMapping);
     }
-  }
+  });
 }
 
 function createMessage(diagramElement, messagges, activityList, messageAttributesList) {
@@ -258,7 +241,21 @@ function createMessage(diagramElement, messagges, activityList, messageAttribute
   const asciiResult = web3.utils.asciiToHex(diagramElement.element.id);
   message.id = web3.utils.padRight(asciiResult, 64)
   message.name = web3.utils.padRight(asciiResult, 64)
-  message.mappingKey = web3.utils.padRight(0, 64);
+  const businessObject = diagramElement.element.businessObject;
+  const messageItems = businessObject.get('messageItems') || [];
+  if (messageItems.length > 0 && businessObject.name) {
+    message.mappingKey = web3.utils.padRight(
+      web3.utils.asciiToHex(businessObject.name.split('(')[0]),
+      64
+    );
+  } else if (businessObject.$attrs.messageItem) {
+    message.mappingKey = web3.utils.padRight(
+      web3.utils.asciiToHex(businessObject.$attrs.messageItem),
+      64
+    );
+  } else {
+    message.mappingKey = web3.utils.padRight(0, 64);
+  }
 
   message.sourceParticipant = "0x0000000000000000000000000000000000000000";
   message.targetParticipant = "0x0000000000000000000000000000000000000000";
@@ -271,10 +268,10 @@ function createMessage(diagramElement, messagges, activityList, messageAttribute
   })
   messagges.push(message);
   
-  if (diagramElement.element.businessObject.get('messageItems').length > 0) {
+  if (messageItems.length > 0) {
     
-    console.log("messageItems",diagramElement.element.businessObject.get('messageItems'))
-    diagramElement.element.businessObject.get('messageItems').forEach((element) => {
+    console.log("messageItems", messageItems)
+    messageItems.forEach((element) => {
       let messageAttributeStruct = {
         keyMapping: "",
         attributes: []

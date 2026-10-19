@@ -925,9 +925,32 @@ const legacyContractAbi = [
 	}
 ]
 
-const deployedContract = deployedContracts.contractLogic;
+const legacyExecuteMessageAbi = legacyContractAbi.find(entry => entry.name === 'executeMessage');
+const executeMessageWithParticipantsAbi = Object.assign({}, legacyExecuteMessageAbi, {
+  name: 'executeMessageWithParticipants',
+  inputs: legacyExecuteMessageAbi.inputs.concat([{
+    components: [
+      {
+        internalType: 'bytes32',
+        name: 'role',
+        type: 'bytes32'
+      },
+      {
+        internalType: 'address',
+        name: 'account',
+        type: 'address'
+      }
+    ],
+    internalType: 'struct contractLogicV2.ParticipantAddition[]',
+    name: 'additions',
+    type: 'tuple[]'
+  }])
+});
+const v2FallbackAbi = legacyContractAbi.concat([executeMessageWithParticipantsAbi]);
+const deployedContract = deployedContracts.contractLogicV2 || deployedContracts.contractLogic;
 
-export const contractAbi = deployedContract.abi.length ? deployedContract.abi : legacyContractAbi;
+export const contractAbi = deployedContract.abi.length ? deployedContract.abi : v2FallbackAbi;
+export const contractVersion = deployedContracts.contractLogicV2 ? 2 : 1;
 export const contractAddress = deployedContract.address || '0xfAf38A85818276a02f062E5bE1f1954d5F7E19ee';
 export const blockchainTarget = deployedContracts.settings
   ? deployedContracts.settings.target

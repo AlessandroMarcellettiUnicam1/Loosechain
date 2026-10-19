@@ -3,6 +3,7 @@ import {
   blockchainRpcUrl,
   blockchainTarget,
   blockchainChainId,
+  contractVersion,
   contractAbi,
   contractAddress
 } from './Contract';
@@ -27,6 +28,10 @@ export function getBlockchainWeb3() {
 }
 
 export default async function connectToBlockchain() {
+  if (contractVersion < 2) {
+    throw new Error('Contract Logic V2 has not been deployed. Run the blockchain deployment script and restart the app.');
+  }
+
   if (!contractPromise) {
     contractPromise = (async () => {
       const providerWeb3 = getBlockchainWeb3();
